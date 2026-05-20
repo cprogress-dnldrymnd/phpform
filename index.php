@@ -1,6 +1,5 @@
 <?php
 /**
- * Tundra Lead Capture - Frontend
  * Securely extracts the public reCAPTCHA Site Key from the system configuration.
  */
 $config_file = __DIR__ . '/config.json';
