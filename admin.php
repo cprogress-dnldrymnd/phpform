@@ -664,10 +664,22 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
                         </label>
 
                         <div id="smtpFieldsWrapper" style="<?php echo (isset($config['smtp_enabled']) && $config['smtp_enabled']) ? 'display: block;' : 'display: none;'; ?>">
-                            <div class="form-group"><label>SMTP Host (e.g., smtp.sendgrid.net)</label><input type="text" name="smtp_host" value="<?php echo htmlspecialchars($config['smtp_host'] ?? 'smtp.sendgrid.net'); ?>"></div>
-                            <div class="form-group"><label>SMTP Port (e.g., 587)</label><input type="number" name="smtp_port" value="<?php echo (int)($config['smtp_port'] ?? 587); ?>"></div>
-                            <div class="form-group"><label>SMTP Username (e.g., apikey)</label><input type="text" name="smtp_user" value="<?php echo htmlspecialchars($config['smtp_user'] ?? ''); ?>"></div>
-                            <div class="form-group"><label>SMTP Password (API Key)</label><input type="password" name="smtp_pass" value="<?php echo htmlspecialchars($config['smtp_pass'] ?? ''); ?>"></div>
+                            <div class="form-group" style="margin-top: 1rem;">
+                                <label>SMTP Host (e.g., smtp.sendgrid.net)</label>
+                                <input type="text" name="smtp_host" value="<?php echo htmlspecialchars($config['smtp_host'] ?? 'smtp.sendgrid.net'); ?>">
+                            </div>
+                            <div class="form-group">
+                                <label>SMTP Port (e.g., 587)</label>
+                                <input type="number" name="smtp_port" value="<?php echo (int)($config['smtp_port'] ?? 587); ?>">
+                            </div>
+                            <div class="form-group">
+                                <label>SMTP Username (e.g., apikey)</label>
+                                <input type="text" name="smtp_user" value="<?php echo htmlspecialchars($config['smtp_user'] ?? ''); ?>">
+                            </div>
+                            <div class="form-group">
+                                <label>SMTP Password (API Key)</label>
+                                <input type="password" name="smtp_pass" value="<?php echo htmlspecialchars($config['smtp_pass'] ?? ''); ?>">
+                            </div>
                         </div>
                     </div>
 
@@ -765,6 +777,14 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
                         element.innerText = token;
                     }, 1000);
                 });
+            }
+
+            function toggleSmtpFields() {
+                const toggle = document.getElementById('enableSmtpToggle');
+                const wrapper = document.getElementById('smtpFieldsWrapper');
+                if (toggle && wrapper) {
+                    wrapper.style.display = toggle.checked ? 'block' : 'none';
+                }
             }
 
             function toggleCsvFields() {
