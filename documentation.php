@@ -57,11 +57,11 @@
     <h2>2. Modifying index.php</h2>
     <p>To ensure the form processes correctly, your <code>index.php</code> must adhere to these requirements:</p>
     <ul>
-        <li><strong>Form ID:</strong> Your form must have the ID <code>tundraLeadForm</code>.</li>
+        <li><strong>Form ID:</strong> Your form must have the ID <code>LeadForm</code>.</li>
         <li><strong>Hidden Fields:</strong> Include the standard hidden inputs for UTM tracking so the system can capture marketing source data:</li>
     </ul>
     <pre>
-&lt;form id="tundraLeadForm" ... &gt;
+&lt;form id="LeadForm" ... &gt;
     &lt;input type="hidden" name="utm_source" value=""&gt;
     &lt;input type="hidden" name="utm_medium" value=""&gt;
     &lt;input type="hidden" name="utm_campaign" value=""&gt;

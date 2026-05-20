@@ -30,7 +30,7 @@ function loadRecaptchaScript(siteKey) {
 function initUrlParams() {
     const urlParams = new URLSearchParams(window.location.search);
     const paramsToCapture = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'];
-    const form = document.getElementById('tundraLeadForm');
+    const form = document.getElementById('LeadForm');
 
     if (!form) return;
 
@@ -55,7 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize the reCAPTCHA API if a key is configured
     loadRecaptchaScript(RECAPTCHA_SITE_KEY);
 
-    const form = document.getElementById('tundraLeadForm');
+    const form = document.getElementById('LeadForm');
     if (!form) return;
 
     form.addEventListener('submit', function (e) {

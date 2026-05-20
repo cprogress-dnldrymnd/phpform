@@ -474,7 +474,7 @@ if (file_exists($config_file)) {
         <li><span class="li-check">✓</span>Parrot ANAFI UKR integration requirements</li>
       </ul>
     </div>
-    <form id="tundraLeadForm" class="lead-form-card">
+    <form id="LeadForm" class="lead-form-card">
 
       <h3>Download the full payload lineup</h3>
       <p class="form-sub">Complete specs for all 8 modules — sent directly to your inbox.</p>
