@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Tundra Lead Capture System - Client Documentation
  * Updated for LeadForm ID & SMTP Mailer
@@ -8,50 +7,17 @@
 ?>
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <title>System Documentation</title>
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            line-height: 1.6;
-            max-width: 800px;
-            margin: 40px auto;
-            padding: 20px;
-            color: #333;
-        }
-
-        code {
-            background: #f4f4f4;
-            padding: 2px 5px;
-            border-radius: 4px;
-            font-family: monospace;
-            color: #d63384;
-        }
-
-        pre {
-            background: #f4f4f4;
-            padding: 15px;
-            border-radius: 4px;
-            overflow-x: auto;
-            border: 1px solid #ddd;
-        }
-
-        h1,
-        h2 {
-            color: #2DA1FF;
-        }
-
-        .alert {
-            background: #fff3cd;
-            padding: 10px;
-            border-left: 5px solid #ffc107;
-            margin-bottom: 20px;
-        }
+        body { font-family: 'Inter', sans-serif; line-height: 1.6; max-width: 800px; margin: 40px auto; padding: 20px; color: #333; }
+        code { background: #f4f4f4; padding: 2px 5px; border-radius: 4px; font-family: monospace; color: #d63384; }
+        pre { background: #f4f4f4; padding: 15px; border-radius: 4px; overflow-x: auto; border: 1px solid #ddd; }
+        h1, h2 { color: #2DA1FF; }
+        .alert { background: #fff3cd; padding: 10px; border-left: 5px solid #ffc107; margin-bottom: 20px; }
     </style>
 </head>
-
 <body>
     <h1>System Implementation Guide</h1>
     <div class="alert">
@@ -102,5 +68,4 @@
     <hr>
     <p><small>Developed by <strong>Digitally Disruptive - Donald Raymundo</strong>. Support: <a href="https://digitallydisruptive.co.uk/">digitallydisruptive.co.uk</a></small></p>
 </body>
-
 </html>
