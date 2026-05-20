@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Advanced Standalone Admin Panel.
  * Implements a tabbed interface, JSON-state-managed repeater fields, 
@@ -13,16 +14,19 @@ session_start();
 $config_file = __DIR__ . '/config.json';
 $data_dir = __DIR__ . '/assets/data/';
 
-function get_config($file) {
+function get_config($file)
+{
     if (!file_exists($file)) die("Configuration file not found.");
     return json_decode(file_get_contents($file), true);
 }
 
-function save_config($file, $data) {
+function save_config($file, $data)
+{
     file_put_contents($file, json_encode($data, JSON_PRETTY_PRINT));
 }
 
-function get_available_downloads() {
+function get_available_downloads()
+{
     $download_dir = __DIR__ . '/assets/downloads/';
     $available_files = [];
     if (is_dir($download_dir)) {
@@ -59,26 +63,26 @@ if (isset($_GET['logout'])) {
 if (isset($_POST['update_settings']) && isset($_SESSION['logged_in'])) {
     $config['has_attachment']     = isset($_POST['has_attachment']) ? true : false;
     $config['enable_csv_logging'] = isset($_POST['enable_csv_logging']) ? true : false;
-    
+
     // CSV Settings
     $csv_name = isset($_POST['csv_file_name']) ? basename(htmlspecialchars(strip_tags($_POST['csv_file_name']))) : 'leads.csv';
     if (!empty($csv_name) && substr($csv_name, -4) !== '.csv') {
         $csv_name .= '.csv';
     }
     $config['csv_file_name'] = $csv_name;
-    
+
     if ($config['enable_csv_logging']) {
         if (!is_dir($data_dir)) {
             mkdir($data_dir, 0755, true);
         }
     }
-    
+
     // Form & Attachment Settings
     $config['download_url']         = filter_var($_POST['download_url'], FILTER_SANITIZE_URL);
     $config['download_method']      = isset($_POST['download_method']) ? htmlspecialchars($_POST['download_method']) : 'both';
     $config['download_button_text'] = isset($_POST['download_button_text']) ? htmlspecialchars(strip_tags($_POST['download_button_text'])) : 'Download Payload Specs';
     $config['success_message']      = isset($_POST['success_message']) ? htmlspecialchars(strip_tags($_POST['success_message'])) : 'Success! Your request has been processed.';
-    
+
     // API Integrations (reCAPTCHA)
     $config['recaptcha_enabled']    = isset($_POST['recaptcha_enabled']) ? true : false;
     $config['recaptcha_site_key']   = isset($_POST['recaptcha_site_key']) ? htmlspecialchars(strip_tags($_POST['recaptcha_site_key'])) : '';
@@ -89,7 +93,7 @@ if (isset($_POST['update_settings']) && isset($_SESSION['logged_in'])) {
     $config['zapier_webhook_url']   = filter_var($_POST['zapier_webhook_url'], FILTER_SANITIZE_URL);
     // Note: Do not strip tags from the payload to preserve valid JSON characters.
     $config['zapier_payload']       = isset($_POST['zapier_payload']) ? $_POST['zapier_payload'] : '';
-    
+
     if (isset($_POST['email_templates_json'])) {
         $templates = json_decode($_POST['email_templates_json'], true);
         if (is_array($templates)) {
@@ -106,6 +110,19 @@ if (isset($_POST['update_settings']) && isset($_SESSION['logged_in'])) {
 }
 
 $initial_templates = isset($config['email_templates']) ? $config['email_templates'] : [];
+
+// Initialize Zapier State from existing JSON string
+$initial_zapier = [];
+if (!empty($config['zapier_payload'])) {
+    $decoded = json_decode($config['zapier_payload'], true);
+    if (is_array($decoded)) {
+        foreach ($decoded as $k => $v) {
+            $initial_zapier[] = ['key' => $k, 'value' => $v];
+        }
+    }
+}
+if (empty($initial_zapier)) $initial_zapier = [['key' => 'first_name', 'value' => '{full_name}']];
+
 $local_files = get_available_downloads();
 
 $available_csvs = [];
@@ -142,6 +159,7 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -150,70 +168,324 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { --accent: #2DA1FF; --bg: #f4f6f9; --border: #e2e8f0; --text: #000000; }
-        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); padding: 2rem; margin: 0; }
-        .container { max-width: 1200px; margin: 0 auto; }
-        
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
-        .btn-logout { color: #ef4444; text-decoration: none; font-weight: 600; font-size: 0.9rem; }
-        
+        :root {
+            --accent: #2DA1FF;
+            --bg: #f4f6f9;
+            --border: #e2e8f0;
+            --text: #000000;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding: 2rem;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .btn-logout {
+            color: #ef4444;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
         /* Tab Interface */
-        .tabs { display: flex; gap: 1rem; margin-bottom: 0; border-bottom: 1px solid var(--border); }
-        .tab-btn { background: transparent; border: none; padding: 1rem 2rem; font-size: 1rem; font-weight: 600; color: #000; cursor: pointer; border-bottom: 3px solid transparent; opacity: 0.5; transition: opacity 0.2s; }
-        .tab-btn:hover { opacity: 0.8; }
-        .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); opacity: 1; }
-        .tab-content { display: none; background: #fff; padding: 2rem; border-radius: 0 0 8px 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        .tab-content.active { display: block; }
-        
-        .form-group { margin-bottom: 1.5rem; }
-        label { display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.9rem; }
-        input[type="text"], input[type="password"], input[type="url"], textarea, select { width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 4px; box-sizing: border-box; font-family: inherit; color: #000; }
-        small { color: #000; opacity: 0.7; }
-        
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            padding: 1rem 2rem;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #000;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            opacity: 0.5;
+            transition: opacity 0.2s;
+        }
+
+        .tab-btn:hover {
+            opacity: 0.8;
+        }
+
+        .tab-btn.active {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+            opacity: 1;
+        }
+
+        .tab-content {
+            display: none;
+            background: #fff;
+            padding: 2rem;
+            border-radius: 0 0 8px 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        input[type="text"],
+        input[type="password"],
+        input[type="url"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-family: inherit;
+            color: #000;
+        }
+
+        small {
+            color: #000;
+            opacity: 0.7;
+        }
+
         /* Token Badges */
-        .token-container { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; }
-        .token-badge { background: #f1f5f9; border: 1px solid var(--border); padding: 0.4rem 0.8rem; border-radius: 6px; font-family: monospace; font-size: 0.85rem; font-weight: 600; color: var(--accent); cursor: pointer; transition: all 0.15s ease; user-select: none; }
-        .token-badge:hover { background: #e2e8f0; transform: translateY(-1px); }
-        .token-badge.copied { background: var(--accent); color: #fff; border-color: var(--accent); }
+        .token-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .token-badge {
+            background: #f1f5f9;
+            border: 1px solid var(--border);
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--accent);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            user-select: none;
+        }
+
+        .token-badge:hover {
+            background: #e2e8f0;
+            transform: translateY(-1px);
+        }
+
+        .token-badge.copied {
+            background: var(--accent);
+            color: #fff;
+            border-color: var(--accent);
+        }
 
         /* Repeater Architecture */
-        .repeater-item { border: 1px solid var(--border); border-radius: 8px; margin-bottom: 1rem; overflow: hidden; }
-        .repeater-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: #f8fafc; cursor: pointer; user-select: none; }
-        .repeater-title { font-weight: 700; margin: 0; }
-        .repeater-actions { display: flex; gap: 0.5rem; }
-        .btn-icon { background: #fff; border: 1px solid var(--border); border-radius: 4px; padding: 0.4rem 0.8rem; cursor: pointer; font-size: 0.8rem; font-weight: 600; color: #000; }
-        .btn-icon:hover { background: #f1f5f9; }
-        .btn-delete { color: #ef4444; }
-        
-        .repeater-body { display: none; padding: 1.5rem; border-top: 1px solid var(--border); }
-        .repeater-item.expanded .repeater-body { display: block; }
-        
+        .repeater-item {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            overflow: hidden;
+        }
+
+        .repeater-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: #f8fafc;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .repeater-title {
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .repeater-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-icon {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 0.4rem 0.8rem;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #000;
+        }
+
+        .btn-icon:hover {
+            background: #f1f5f9;
+        }
+
+        .btn-delete {
+            color: #ef4444;
+        }
+
+        .repeater-body {
+            display: none;
+            padding: 1.5rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .repeater-item.expanded .repeater-body {
+            display: block;
+        }
+
         /* Split Grid for Live Preview */
-        .editor-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
-        .live-preview-box { border: 1px solid var(--border); border-radius: 4px; height: 100%; min-height: 400px; background: #fff; overflow-y: auto; }
-        .live-preview-header { background: #f1f5f9; padding: 0.75rem; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: #000; border-bottom: 1px solid var(--border); }
-        .live-preview-content { padding: 1rem; }
+        .editor-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .live-preview-box {
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            height: 100%;
+            min-height: 400px;
+            background: #fff;
+            overflow-y: auto;
+        }
+
+        .live-preview-header {
+            background: #f1f5f9;
+            padding: 0.75rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #000;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .live-preview-content {
+            padding: 1rem;
+        }
 
         /* Data Table */
-        .data-table-wrapper { overflow-x: auto; border: 1px solid var(--border); border-radius: 6px; }
-        .data-table { width: 100%; border-collapse: collapse; text-align: left; }
-        .data-table th, .data-table td { padding: 0.85rem 1.25rem; border-bottom: 1px solid var(--border); }
-        .data-table th { background: #f8fafc; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap; }
-        .data-table td { font-size: 0.9rem; color: #1e293b; white-space: nowrap; }
-        .data-table tr:last-child td { border-bottom: none; }
-        .data-table tr:hover { background: #f1f5f9; }
+        .data-table-wrapper {
+            overflow-x: auto;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+        }
 
-        .btn-primary { background: var(--accent); color: #fff; border: none; padding: 0.75rem 1.5rem; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 1rem; margin-top: 1rem; }
-        .btn-secondary { background: #e2e8f0; color: #000; border: none; padding: 0.75rem 1.5rem; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.9rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; }
-        
-        .alert { padding: 1rem; margin-bottom: 1.5rem; border-radius: 4px; font-weight: 600; }
-        .alert-error { background: #fee2e2; color: #991b1b; }
-        .alert-success { background: #dcfce7; color: #166534; }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 0.85rem 1.25rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .data-table th {
+            background: #f8fafc;
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            white-space: nowrap;
+        }
+
+        .data-table td {
+            font-size: 0.9rem;
+            color: #1e293b;
+            white-space: nowrap;
+        }
+
+        .data-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .data-table tr:hover {
+            background: #f1f5f9;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1rem;
+            margin-top: 1rem;
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #000;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.9rem;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .alert {
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .alert-error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .alert-success {
+            background: #dcfce7;
+            color: #166534;
+        }
     </style>
 </head>
+
 <body>
     <div class="container">
-        
+
         <?php if (!isset($_SESSION['logged_in'])): ?>
             <div style="max-width: 400px; margin: 4rem auto; background: #fff; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
                 <h2>Authentication Required</h2>
@@ -246,7 +518,7 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
                 <input type="hidden" name="email_templates_json" id="emailTemplatesJson">
 
                 <div id="tab-form" class="tab-content <?php echo $active_tab === 'tab-form' ? 'active' : ''; ?>">
-                    
+
                     <div class="form-group">
                         <label>Form Success Message</label>
                         <input type="text" name="success_message" value="<?php echo htmlspecialchars(isset($config['success_message']) ? $config['success_message'] : 'Success! Your request has been processed.'); ?>">
@@ -258,7 +530,7 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
                             <input type="checkbox" name="enable_csv_logging" id="enableCsvToggle" value="1" <?php echo (isset($config['enable_csv_logging']) && $config['enable_csv_logging']) ? 'checked' : ''; ?> onchange="toggleCsvFields()">
                             <span style="font-size: 1rem;">Enable CSV Lead Logging</span>
                         </label>
-                        
+
                         <div id="csvFieldsWrapper" style="<?php echo (isset($config['enable_csv_logging']) && $config['enable_csv_logging']) ? 'display: block;' : 'display: none;'; ?>">
                             <label style="margin-top: 1rem;">CSV File Name</label>
                             <input type="text" name="csv_file_name" value="<?php echo htmlspecialchars($active_csv_setting); ?>" placeholder="leads.csv">
@@ -289,7 +561,7 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
                             <label>File Download URL</label>
                             <select name="download_url" id="globalDownloadUrl" onchange="triggerGlobalPreviewRefresh()">
                                 <option value="">-- Select an available file --</option>
-                                <?php foreach($local_files as $file): ?>
+                                <?php foreach ($local_files as $file): ?>
                                     <option value="<?php echo htmlspecialchars($file); ?>" <?php echo (isset($config['download_url']) && $config['download_url'] === $file) ? 'selected' : ''; ?>>
                                         <?php echo htmlspecialchars(basename($file)); ?>
                                     </option>
@@ -304,15 +576,15 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
                             <small>The text displayed inside the <code>{download_button}</code> token.</small>
                         </div>
                     </div>
-                    
+
                     <hr style="margin: 2rem 0; border: 0; border-top: 1px solid var(--border);">
-                    
+
                     <div class="form-group" style="max-width: 400px;">
                         <label>Change Admin Password (leave blank to keep current)</label>
                         <input type="text" name="decoy_username" style="display:none;" aria-hidden="true" autocomplete="username" tabindex="-1">
                         <input type="password" name="new_password" autocomplete="new-password">
                     </div>
-                    
+
                     <div style="margin-top: 2rem;">
                         <button type="submit" name="update_settings" class="btn-primary" onclick="serializeState()">Deploy Settings</button>
                     </div>
@@ -332,7 +604,7 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
                     </div>
 
                     <div id="repeaterContainer"></div>
-                    
+
                     <button type="button" class="btn-secondary" onclick="addTemplate()">+ Add Email Template</button>
 
                     <div style="margin-top: 2rem; border-top: 1px solid var(--border); padding-top: 1.5rem;">
@@ -341,13 +613,13 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
                 </div>
 
                 <div id="tab-integrations" class="tab-content <?php echo $active_tab === 'tab-integrations' ? 'active' : ''; ?>">
-                    
+
                     <div class="form-group" style="background: #fff; padding: 1rem; border: 1px solid var(--border); border-radius: 4px;">
                         <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; margin-bottom: 0.75rem;">
                             <input type="checkbox" name="recaptcha_enabled" id="enableRecaptchaToggle" value="1" <?php echo (isset($config['recaptcha_enabled']) && $config['recaptcha_enabled']) ? 'checked' : ''; ?> onchange="toggleRecaptchaFields()">
                             <span style="font-size: 1rem;">Enable Google reCAPTCHA v3 Protection</span>
                         </label>
-                        
+
                         <div id="recaptchaFieldsWrapper" style="<?php echo (isset($config['recaptcha_enabled']) && $config['recaptcha_enabled']) ? 'display: block;' : 'display: none;'; ?>">
                             <div class="form-group" style="margin-top: 1rem;">
                                 <label>Site Key</label>
@@ -365,20 +637,16 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
                             <input type="checkbox" name="zapier_enabled" id="enableZapierToggle" value="1" <?php echo (isset($config['zapier_enabled']) && $config['zapier_enabled']) ? 'checked' : ''; ?> onchange="toggleZapierFields()">
                             <span style="font-size: 1rem;">Enable Zapier Webhook Integration</span>
                         </label>
-                        
+
                         <div id="zapierFieldsWrapper" style="<?php echo (isset($config['zapier_enabled']) && $config['zapier_enabled']) ? 'display: block;' : 'display: none;'; ?>">
                             <div class="form-group" style="margin-top: 1rem;">
                                 <label>Webhook URL</label>
                                 <input type="url" name="zapier_webhook_url" value="<?php echo htmlspecialchars(isset($config['zapier_webhook_url']) ? $config['zapier_webhook_url'] : ''); ?>" placeholder="https://hooks.zapier.com/hooks/catch/...">
                             </div>
-                            <div class="form-group">
-                                <label>JSON Payload Mapping</label>
-                                <?php 
-                                    $default_json = "{\n  \"first_name\": \"{full_name}\",\n  \"email\": \"{work_email}\",\n  \"organization\": \"{org_type}\",\n  \"phone\": \"{phone}\",\n  \"download_link\": \"{download_link}\"\n}";
-                                ?>
-                                <textarea name="zapier_payload" rows="10" style="font-family: monospace; font-size: 0.85rem; line-height: 1.5; background: #f8fafc;"><?php echo htmlspecialchars(isset($config['zapier_payload']) && !empty($config['zapier_payload']) ? $config['zapier_payload'] : $default_json); ?></textarea>
-                                <small style="display: block; margin-top: 0.5rem;">Construct your JSON payload using the available dynamic tokens. The processor safely encodes all variables before transmission to prevent syntax errors.</small>
-                            </div>
+
+                            <label>Payload Mapping</label>
+                            <div id="zapierRepeaterContainer" style="margin-bottom: 1rem;"></div>
+                            <button type="button" class="btn-secondary" onclick="addZapierRow()">+ Add Mapping Field</button>
                         </div>
                     </div>
 
@@ -392,12 +660,12 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
                 <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
                     <div>
                         <h3 style="margin: 0 0 0.5rem 0;">Captured Leads</h3>
-                        
+
                         <form method="GET" style="margin:0; display:flex; align-items:center; gap: 0.5rem;">
                             <label style="margin:0; font-size:0.85rem; color:#64748b;">Viewing:</label>
                             <?php if (!empty($available_csvs)): ?>
                                 <select name="view_csv" onchange="this.form.submit()" style="width:auto; padding:0.4rem 0.75rem; font-size: 0.85rem;">
-                                    <?php foreach($available_csvs as $csv): ?>
+                                    <?php foreach ($available_csvs as $csv): ?>
                                         <option value="<?php echo htmlspecialchars($csv); ?>" <?php echo $csv === $current_view_csv ? 'selected' : ''; ?>>
                                             <?php echo htmlspecialchars($csv); ?>
                                         </option>
@@ -408,7 +676,7 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
                             <?php endif; ?>
                         </form>
                     </div>
-                    
+
                     <div>
                         <?php if (file_exists($view_csv_path) && filesize($view_csv_path) > 0): ?>
                             <a href="assets/data/<?php echo htmlspecialchars($current_view_csv); ?>" download class="btn-secondary">⬇ Download CSV</a>
@@ -420,7 +688,7 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
                 if (file_exists($view_csv_path) && filesize($view_csv_path) > 0 && ($handle = fopen($view_csv_path, "r")) !== FALSE) {
                     $rows = [];
                     $max_cols = 0;
-                    
+
                     while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
                         if (count($data) === 1 && $data[0] === null) continue;
                         $rows[] = $data;
@@ -459,81 +727,81 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
     </div>
 
     <?php if (isset($_SESSION['logged_in'])): ?>
-    <script>
-        let appState = <?php echo json_encode($initial_templates); ?>;
+        <script>
+            let appState = <?php echo json_encode($initial_templates); ?>;
 
-        function generateId() {
-            return 'tpl_' + Math.random().toString(36).substr(2, 9);
-        }
-
-        function copyToken(element) {
-            const token = element.innerText;
-            navigator.clipboard.writeText(token).then(() => {
-                element.classList.add('copied');
-                element.innerText = 'Copied!';
-                setTimeout(() => {
-                    element.classList.remove('copied');
-                    element.innerText = token;
-                }, 1000);
-            });
-        }
-
-        function toggleCsvFields() {
-            const toggle = document.getElementById('enableCsvToggle');
-            const wrapper = document.getElementById('csvFieldsWrapper');
-            if (toggle && wrapper) {
-                wrapper.style.display = toggle.checked ? 'block' : 'none';
+            function generateId() {
+                return 'tpl_' + Math.random().toString(36).substr(2, 9);
             }
-        }
 
-        function toggleAttachmentFields() {
-            const toggle = document.getElementById('hasAttachmentToggle');
-            const wrapper = document.getElementById('attachmentFieldsWrapper');
-            if (toggle && wrapper) {
-                wrapper.style.display = toggle.checked ? 'block' : 'none';
-                triggerGlobalPreviewRefresh();
+            function copyToken(element) {
+                const token = element.innerText;
+                navigator.clipboard.writeText(token).then(() => {
+                    element.classList.add('copied');
+                    element.innerText = 'Copied!';
+                    setTimeout(() => {
+                        element.classList.remove('copied');
+                        element.innerText = token;
+                    }, 1000);
+                });
             }
-        }
 
-        function toggleRecaptchaFields() {
-            const toggle = document.getElementById('enableRecaptchaToggle');
-            const wrapper = document.getElementById('recaptchaFieldsWrapper');
-            if (toggle && wrapper) {
-                wrapper.style.display = toggle.checked ? 'block' : 'none';
+            function toggleCsvFields() {
+                const toggle = document.getElementById('enableCsvToggle');
+                const wrapper = document.getElementById('csvFieldsWrapper');
+                if (toggle && wrapper) {
+                    wrapper.style.display = toggle.checked ? 'block' : 'none';
+                }
             }
-        }
 
-        function toggleZapierFields() {
-            const toggle = document.getElementById('enableZapierToggle');
-            const wrapper = document.getElementById('zapierFieldsWrapper');
-            if (toggle && wrapper) {
-                wrapper.style.display = toggle.checked ? 'block' : 'none';
+            function toggleAttachmentFields() {
+                const toggle = document.getElementById('hasAttachmentToggle');
+                const wrapper = document.getElementById('attachmentFieldsWrapper');
+                if (toggle && wrapper) {
+                    wrapper.style.display = toggle.checked ? 'block' : 'none';
+                    triggerGlobalPreviewRefresh();
+                }
             }
-        }
 
-        function switchTab(evt, tabId) {
-            evt.preventDefault();
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
-            evt.currentTarget.classList.add('active');
-            
-            if (window.history.replaceState && window.location.search) {
-                const newUrl = window.location.pathname;
-                window.history.replaceState({}, document.title, newUrl);
+            function toggleRecaptchaFields() {
+                const toggle = document.getElementById('enableRecaptchaToggle');
+                const wrapper = document.getElementById('recaptchaFieldsWrapper');
+                if (toggle && wrapper) {
+                    wrapper.style.display = toggle.checked ? 'block' : 'none';
+                }
             }
-        }
 
-        function renderRepeater() {
-            const container = document.getElementById('repeaterContainer');
-            container.innerHTML = '';
+            function toggleZapierFields() {
+                const toggle = document.getElementById('enableZapierToggle');
+                const wrapper = document.getElementById('zapierFieldsWrapper');
+                if (toggle && wrapper) {
+                    wrapper.style.display = toggle.checked ? 'block' : 'none';
+                }
+            }
 
-            appState.forEach((tpl) => {
-                const item = document.createElement('div');
-                item.className = 'repeater-item';
-                item.dataset.id = tpl.id;
-                
-                item.innerHTML = `
+            function switchTab(evt, tabId) {
+                evt.preventDefault();
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.getElementById(tabId).classList.add('active');
+                evt.currentTarget.classList.add('active');
+
+                if (window.history.replaceState && window.location.search) {
+                    const newUrl = window.location.pathname;
+                    window.history.replaceState({}, document.title, newUrl);
+                }
+            }
+
+            function renderRepeater() {
+                const container = document.getElementById('repeaterContainer');
+                container.innerHTML = '';
+
+                appState.forEach((tpl) => {
+                    const item = document.createElement('div');
+                    item.className = 'repeater-item';
+                    item.dataset.id = tpl.id;
+
+                    item.innerHTML = `
                     <div class="repeater-header" onclick="toggleCollapse(this)">
                         <h4 class="repeater-title">${tpl.name || 'Untitled Template'}</h4>
                         <div class="repeater-actions">
@@ -571,103 +839,154 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
                         </div>
                     </div>
                 `;
-                container.appendChild(item);
-                renderPreview(tpl.id, tpl.body);
-            });
-        }
-
-        function updateState(id, key, value) {
-            const index = appState.findIndex(t => t.id === id);
-            if (index > -1) {
-                appState[index][key] = value;
+                    container.appendChild(item);
+                    renderPreview(tpl.id, tpl.body);
+                });
             }
-        }
 
-        function updateHeader(input, value) {
-            const header = input.closest('.repeater-item').querySelector('.repeater-title');
-            header.textContent = value || 'Untitled Template';
-        }
+            function updateState(id, key, value) {
+                const index = appState.findIndex(t => t.id === id);
+                if (index > -1) {
+                    appState[index][key] = value;
+                }
+            }
 
-        function addTemplate() {
-            appState.push({
-                id: generateId(),
-                name: 'New Template',
-                to: '',
-                subject: '',
-                body: ''
-            });
-            renderRepeater();
-            const items = document.querySelectorAll('.repeater-item');
-            if(items.length > 0) items[items.length - 1].classList.add('expanded');
-        }
+            function updateHeader(input, value) {
+                const header = input.closest('.repeater-item').querySelector('.repeater-title');
+                header.textContent = value || 'Untitled Template';
+            }
 
-        function duplicateTemplate(evt, id) {
-            evt.stopPropagation();
-            const index = appState.findIndex(t => t.id === id);
-            if (index > -1) {
-                const clone = JSON.parse(JSON.stringify(appState[index]));
-                clone.id = generateId();
-                clone.name = clone.name + ' (Copy)';
-                appState.splice(index + 1, 0, clone);
+            function addTemplate() {
+                appState.push({
+                    id: generateId(),
+                    name: 'New Template',
+                    to: '',
+                    subject: '',
+                    body: ''
+                });
                 renderRepeater();
+                const items = document.querySelectorAll('.repeater-item');
+                if (items.length > 0) items[items.length - 1].classList.add('expanded');
             }
-        }
 
-        function deleteTemplate(evt, id) {
-            evt.stopPropagation();
-            if(confirm('Are you sure you want to delete this template?')) {
-                appState = appState.filter(t => t.id !== id);
+            function duplicateTemplate(evt, id) {
+                evt.stopPropagation();
+                const index = appState.findIndex(t => t.id === id);
+                if (index > -1) {
+                    const clone = JSON.parse(JSON.stringify(appState[index]));
+                    clone.id = generateId();
+                    clone.name = clone.name + ' (Copy)';
+                    appState.splice(index + 1, 0, clone);
+                    renderRepeater();
+                }
+            }
+
+            function deleteTemplate(evt, id) {
+                evt.stopPropagation();
+                if (confirm('Are you sure you want to delete this template?')) {
+                    appState = appState.filter(t => t.id !== id);
+                    renderRepeater();
+                }
+            }
+
+            function toggleCollapse(headerEl) {
+                const item = headerEl.closest('.repeater-item');
+                item.classList.toggle('expanded');
+            }
+
+            function triggerGlobalPreviewRefresh() {
+                appState.forEach(tpl => renderPreview(tpl.id, tpl.body));
+            }
+
+            function renderPreview(id, htmlString) {
+                const previewFrame = document.getElementById('preview_' + id);
+                if (!previewFrame) return;
+
+                const isAttachmentEnabled = document.getElementById('hasAttachmentToggle').checked;
+                const currentUrl = document.getElementById('globalDownloadUrl').value || '#';
+                const btnInput = document.getElementById('globalButtonText');
+                const currentBtnText = (btnInput && btnInput.value.trim() !== '') ? btnInput.value : 'Download Payload Specs';
+
+                const mockButton = (isAttachmentEnabled && currentUrl !== '#') ?
+                    `<a href="${currentUrl}" style="display: inline-block; background-color: #2DA1FF; color: #0a0a0a; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold; font-family: 'Inter', -apple-system, BlinkMacSystemFont, Arial, sans-serif; font-size: 14px;">${escapeHtml(currentBtnText)}</a>` :
+                    '';
+
+                let processedHtml = htmlString
+                    .replace(/{full_name}/g, 'James Morton')
+                    .replace(/{work_email}/g, 'james@police.uk')
+                    .replace(/{org_type}/g, 'Police Aviation Unit')
+                    .replace(/{phone}/g, '+44 7700 900077')
+                    .replace(/{download_link}/g, isAttachmentEnabled ? currentUrl : '')
+                    .replace(/{download_button}/g, mockButton);
+
+                previewFrame.innerHTML = processedHtml;
+            }
+
+            function serializeState() {
+                document.getElementById('emailTemplatesJson').value = JSON.stringify(appState);
+            }
+
+            function escapeHtml(unsafe) {
+                return (unsafe || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+            }
+
+            let zapierState = <?php echo json_encode($initial_zapier); ?>;
+
+            function renderZapierRepeater() {
+                const container = document.getElementById('zapierRepeaterContainer');
+                container.innerHTML = '';
+                zapierState.forEach((row, index) => {
+                    const div = document.createElement('div');
+                    div.className = 'repeater-item';
+                    div.style.padding = '10px';
+                    div.style.display = 'flex';
+                    div.style.gap = '10px';
+                    div.innerHTML = `
+                <input type="text" placeholder="Key (e.g. first_name)" value="${row.key}" oninput="updateZapierState(${index}, 'key', this.value)">
+                <input type="text" placeholder="Value (e.g. {full_name})" value="${row.value}" oninput="updateZapierState(${index}, 'value', this.value)">
+                <button type="button" class="btn-icon btn-delete" onclick="deleteZapierRow(${index})">×</button>
+            `;
+                    container.appendChild(div);
+                });
+            }
+
+            function addZapierRow() {
+                zapierState.push({
+                    key: '',
+                    value: ''
+                });
+                renderZapierRepeater();
+            }
+
+            function deleteZapierRow(index) {
+                zapierState.splice(index, 1);
+                renderZapierRepeater();
+            }
+
+            function updateZapierState(index, field, val) {
+                zapierState[index][field] = val;
+            }
+
+            function serializeState() {
+                // Serialize Email Templates (existing)
+                document.getElementById('emailTemplatesJson').value = JSON.stringify(appState);
+
+                // Serialize Zapier Repeater to JSON string
+                const zapierObj = {};
+                zapierState.forEach(row => {
+                    if (row.key) zapierObj[row.key] = row.value;
+                });
+                document.getElementById('zapierJsonPayload').value = JSON.stringify(zapierObj, null, 2);
+            }
+
+            document.addEventListener('DOMContentLoaded', () => {
                 renderRepeater();
-            }
-        }
-
-        function toggleCollapse(headerEl) {
-            const item = headerEl.closest('.repeater-item');
-            item.classList.toggle('expanded');
-        }
-
-        function triggerGlobalPreviewRefresh() {
-            appState.forEach(tpl => renderPreview(tpl.id, tpl.body));
-        }
-
-        function renderPreview(id, htmlString) {
-            const previewFrame = document.getElementById('preview_' + id);
-            if (!previewFrame) return;
-
-            const isAttachmentEnabled = document.getElementById('hasAttachmentToggle').checked;
-            const currentUrl = document.getElementById('globalDownloadUrl').value || '#';
-            const btnInput = document.getElementById('globalButtonText');
-            const currentBtnText = (btnInput && btnInput.value.trim() !== '') ? btnInput.value : 'Download Payload Specs';
-            
-            const mockButton = (isAttachmentEnabled && currentUrl !== '#') 
-                ? `<a href="${currentUrl}" style="display: inline-block; background-color: #2DA1FF; color: #0a0a0a; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold; font-family: 'Inter', -apple-system, BlinkMacSystemFont, Arial, sans-serif; font-size: 14px;">${escapeHtml(currentBtnText)}</a>` 
-                : '';
-
-            let processedHtml = htmlString
-                .replace(/{full_name}/g, 'James Morton')
-                .replace(/{work_email}/g, 'james@police.uk')
-                .replace(/{org_type}/g, 'Police Aviation Unit')
-                .replace(/{phone}/g, '+44 7700 900077')
-                .replace(/{download_link}/g, isAttachmentEnabled ? currentUrl : '')
-                .replace(/{download_button}/g, mockButton);
-
-            previewFrame.innerHTML = processedHtml;
-        }
-
-        function serializeState() {
-            document.getElementById('emailTemplatesJson').value = JSON.stringify(appState);
-        }
-
-        function escapeHtml(unsafe) {
-            return (unsafe || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            renderRepeater();
-            const first = document.querySelector('.repeater-item');
-            if (first) first.classList.add('expanded');
-        });
-    </script>
+                renderZapierRepeater();
+                const first = document.querySelector('.repeater-item');
+                if (first) first.classList.add('expanded');
+            });
+        </script>
     <?php endif; ?>
 </body>
+
 </html>
