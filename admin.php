@@ -111,6 +111,7 @@ if (isset($_POST['update_settings']) && isset($_SESSION['logged_in'])) {
     $config['smtp_port']         = (int)$_POST['smtp_port'];
     $config['smtp_user']         = htmlspecialchars($_POST['smtp_user']);
     $config['smtp_pass']         = htmlspecialchars($_POST['smtp_pass']);
+    $config['smtp_encryption'] = htmlspecialchars($_POST['smtp_encryption']);
 
     save_config($config_file, $config);
     $success = 'Settings updated successfully.';
