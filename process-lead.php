@@ -198,6 +198,11 @@ foreach ($templates as $tpl) {
         if (isset($config['smtp_enabled']) && $config['smtp_enabled']) {
             // SMTP Sending
             $mail = new PHPMailer(true);
+            // ADD THIS FOR DEBUGGING
+            $mail->SMTPDebug = 2;
+            $mail->Debugoutput = function ($str, $level) {
+                file_put_contents(__DIR__ . '/assets/data/smtp_debug.log', "$level: $str\n", FILE_APPEND);
+            };
             $mail->isSMTP();
             $mail->Host       = $config['smtp_host'];
             $mail->SMTPAuth   = true;
