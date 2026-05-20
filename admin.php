@@ -665,6 +665,14 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
                         </label>
 
                         <div id="smtpFieldsWrapper" style="<?php echo (isset($config['smtp_enabled']) && $config['smtp_enabled']) ? 'display: block;' : 'display: none;'; ?>">
+                            <div class="form-group">
+                                <label>Encryption</label>
+                                <select name="smtp_encryption">
+                                    <option value="tls" <?php echo ($config['smtp_encryption'] ?? '') === 'tls' ? 'selected' : ''; ?>>TLS (Recommended for 587)</option>
+                                    <option value="ssl" <?php echo ($config['smtp_encryption'] ?? '') === 'ssl' ? 'selected' : ''; ?>>SSL (Recommended for 465)</option>
+                                    <option value="none" <?php echo ($config['smtp_encryption'] ?? '') === 'none' ? 'selected' : ''; ?>>None</option>
+                                </select>
+                            </div>
                             <div class="form-group" style="margin-top: 1rem;">
                                 <label>SMTP Host (e.g., smtp.sendgrid.net)</label>
                                 <input type="text" name="smtp_host" value="<?php echo htmlspecialchars($config['smtp_host'] ?? 'smtp.sendgrid.net'); ?>">

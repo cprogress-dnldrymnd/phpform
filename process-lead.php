@@ -5,6 +5,7 @@
  * Incorporates reCAPTCHA v3 cURL validation, dynamic CSV logging,
  * Zapier webhook routing, email template parsing, and dynamic success messaging.
  */
+
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
@@ -202,7 +203,15 @@ foreach ($templates as $tpl) {
             $mail->SMTPAuth   = true;
             $mail->Username   = $config['smtp_user'];
             $mail->Password   = $config['smtp_pass'];
-            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+            $encryption = isset($config['smtp_encryption']) ? $config['smtp_encryption'] : 'tls';
+            if ($encryption === 'tls') {
+                $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+            } elseif ($encryption === 'ssl') {
+                $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
+            } else {
+                $mail->SMTPSecure = ''; // None
+            }
+
             $mail->Port       = $config['smtp_port'];
 
             $mail->setFrom($config['smtp_user'] === 'apikey' ? 'your-verified-email@domain.com' : $config['smtp_user'], $tpl['from_name']);
