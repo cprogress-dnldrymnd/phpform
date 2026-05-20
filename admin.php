@@ -516,7 +516,7 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
 
             <form method="POST" id="mainForm">
                 <input type="hidden" name="email_templates_json" id="emailTemplatesJson">
-
+                <input type="hidden" name="zapier_json_payload" id="zapierJsonPayload">
                 <div id="tab-form" class="tab-content <?php echo $active_tab === 'tab-form' ? 'active' : ''; ?>">
 
                     <div class="form-group">
