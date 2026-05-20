@@ -105,13 +105,13 @@ if (isset($_POST['update_settings']) && isset($_SESSION['logged_in'])) {
         $config['admin_password'] = $_POST['new_password'];
     }
 
-
+    // API Integrations (SMTP)
     $config['smtp_enabled']      = isset($_POST['smtp_enabled']) ? true : false;
     $config['smtp_host']         = htmlspecialchars($_POST['smtp_host']);
     $config['smtp_port']         = (int)$_POST['smtp_port'];
     $config['smtp_user']         = htmlspecialchars($_POST['smtp_user']);
     $config['smtp_pass']         = htmlspecialchars($_POST['smtp_pass']);
-    $config['smtp_encryption'] = htmlspecialchars($_POST['smtp_encryption']);
+    $config['smtp_encryption']   = htmlspecialchars($_POST['smtp_encryption']);
 
     save_config($config_file, $config);
     $success = 'Settings updated successfully.';
@@ -489,6 +489,59 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
             background: #dcfce7;
             color: #166534;
         }
+
+        /* Collapsible Integrations Styles */
+        .collapsible-container {
+            margin-bottom: 1.5rem;
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+        }
+        .collapsible-header {
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            font-weight: 600;
+            background: #f8fafc;
+            border-bottom: 1px solid transparent;
+            border-radius: 4px;
+        }
+        .collapsible-header:hover {
+            background: #f1f5f9;
+        }
+        .collapsible-header.expanded {
+            border-bottom-color: var(--border);
+            border-radius: 4px 4px 0 0;
+        }
+        .collapsible-content {
+            display: none;
+            padding: 1rem;
+        }
+        .header-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: normal;
+            margin: 0;
+            cursor: pointer;
+        }
+        .collapsible-header::after {
+            content: '▼';
+            font-size: 0.8rem;
+            color: #64748b;
+            margin-left: 1rem;
+            transition: transform 0.2s;
+        }
+        .collapsible-header.expanded::after {
+            transform: rotate(180deg);
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
     </style>
 </head>
 
@@ -626,14 +679,18 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
 
                 <div id="tab-integrations" class="tab-content <?php echo $active_tab === 'tab-integrations' ? 'active' : ''; ?>">
 
-                    <div class="form-group" style="background: #fff; padding: 1rem; border: 1px solid var(--border); border-radius: 4px;">
-                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; margin-bottom: 0.75rem;">
-                            <input type="checkbox" name="recaptcha_enabled" id="enableRecaptchaToggle" value="1" <?php echo (isset($config['recaptcha_enabled']) && $config['recaptcha_enabled']) ? 'checked' : ''; ?> onchange="toggleRecaptchaFields()">
-                            <span style="font-size: 1rem;">Enable Google reCAPTCHA v3 Protection</span>
-                        </label>
-
-                        <div id="recaptchaFieldsWrapper" style="<?php echo (isset($config['recaptcha_enabled']) && $config['recaptcha_enabled']) ? 'display: block;' : 'display: none;'; ?>">
-                            <div class="form-group" style="margin-top: 1rem;">
+                    <div class="collapsible-container">
+                        <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                            <div class="header-left">
+                                <span>Google reCAPTCHA v3 Protection</span>
+                            </div>
+                            <label class="header-checkbox" onclick="event.stopPropagation()">
+                                <input type="checkbox" name="recaptcha_enabled" value="1" <?php echo (isset($config['recaptcha_enabled']) && $config['recaptcha_enabled']) ? 'checked' : ''; ?>>
+                                Enable
+                            </label>
+                        </div>
+                        <div class="collapsible-content">
+                            <div class="form-group">
                                 <label>Site Key</label>
                                 <input type="text" name="recaptcha_site_key" value="<?php echo htmlspecialchars(isset($config['recaptcha_site_key']) ? $config['recaptcha_site_key'] : ''); ?>" placeholder="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI">
                             </div>
@@ -644,14 +701,18 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
                         </div>
                     </div>
 
-                    <div class="form-group" style="background: #fff; padding: 1rem; border: 1px solid var(--border); border-radius: 4px; margin-top: 1.5rem;">
-                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; margin-bottom: 0.75rem;">
-                            <input type="checkbox" name="zapier_enabled" id="enableZapierToggle" value="1" <?php echo (isset($config['zapier_enabled']) && $config['zapier_enabled']) ? 'checked' : ''; ?> onchange="toggleZapierFields()">
-                            <span style="font-size: 1rem;">Enable Zapier Webhook Integration</span>
-                        </label>
-
-                        <div id="zapierFieldsWrapper" style="<?php echo (isset($config['zapier_enabled']) && $config['zapier_enabled']) ? 'display: block;' : 'display: none;'; ?>">
-                            <div class="form-group" style="margin-top: 1rem;">
+                    <div class="collapsible-container">
+                        <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                            <div class="header-left">
+                                <span>Zapier Webhook Integration</span>
+                            </div>
+                            <label class="header-checkbox" onclick="event.stopPropagation()">
+                                <input type="checkbox" name="zapier_enabled" value="1" <?php echo (isset($config['zapier_enabled']) && $config['zapier_enabled']) ? 'checked' : ''; ?>>
+                                Enable
+                            </label>
+                        </div>
+                        <div class="collapsible-content">
+                            <div class="form-group">
                                 <label>Webhook URL</label>
                                 <input type="url" name="zapier_webhook_url" value="<?php echo htmlspecialchars(isset($config['zapier_webhook_url']) ? $config['zapier_webhook_url'] : ''); ?>" placeholder="https://hooks.zapier.com/hooks/catch/...">
                             </div>
@@ -662,13 +723,17 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
                         </div>
                     </div>
 
-                    <div class="form-group" style="background: #fff; padding: 1rem; border: 1px solid var(--border); border-radius: 4px; margin-top: 1.5rem;">
-                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; margin-bottom: 0.75rem;">
-                            <input type="checkbox" name="smtp_enabled" id="enableSmtpToggle" value="1" <?php echo (isset($config['smtp_enabled']) && $config['smtp_enabled']) ? 'checked' : ''; ?> onchange="toggleSmtpFields()">
-                            <span style="font-size: 1rem;">Enable SMTP Mailer (SendGrid/Other)</span>
-                        </label>
-
-                        <div id="smtpFieldsWrapper" style="<?php echo (isset($config['smtp_enabled']) && $config['smtp_enabled']) ? 'display: block;' : 'display: none;'; ?>">
+                    <div class="collapsible-container">
+                        <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                            <div class="header-left">
+                                <span>SMTP Mailer (SendGrid/Other)</span>
+                            </div>
+                            <label class="header-checkbox" onclick="event.stopPropagation()">
+                                <input type="checkbox" name="smtp_enabled" value="1" <?php echo (isset($config['smtp_enabled']) && $config['smtp_enabled']) ? 'checked' : ''; ?>>
+                                Enable
+                            </label>
+                        </div>
+                        <div class="collapsible-content">
                             <div class="form-group">
                                 <label>Encryption</label>
                                 <select name="smtp_encryption">
@@ -677,7 +742,7 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
                                     <option value="none" <?php echo ($config['smtp_encryption'] ?? '') === 'none' ? 'selected' : ''; ?>>None</option>
                                 </select>
                             </div>
-                            <div class="form-group" style="margin-top: 1rem;">
+                            <div class="form-group">
                                 <label>SMTP Host (e.g., smtp.sendgrid.net)</label>
                                 <input type="text" name="smtp_host" value="<?php echo htmlspecialchars($config['smtp_host'] ?? 'smtp.sendgrid.net'); ?>">
                             </div>
@@ -792,13 +857,11 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
                 });
             }
 
-
-            function toggleSmtpFields() {
-                const toggle = document.getElementById('enableSmtpToggle');
-                const wrapper = document.getElementById('smtpFieldsWrapper');
-                if (toggle && wrapper) {
-                    wrapper.style.display = toggle.checked ? 'block' : 'none';
-                }
+            // New Collapsible Toggle Logic
+            function toggleCollapsible(el) {
+                const content = el.nextElementSibling;
+                el.classList.toggle('expanded');
+                content.style.display = (content.style.display === 'block') ? 'none' : 'block';
             }
 
             function toggleCsvFields() {
@@ -815,22 +878,6 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
                 if (toggle && wrapper) {
                     wrapper.style.display = toggle.checked ? 'block' : 'none';
                     triggerGlobalPreviewRefresh();
-                }
-            }
-
-            function toggleRecaptchaFields() {
-                const toggle = document.getElementById('enableRecaptchaToggle');
-                const wrapper = document.getElementById('recaptchaFieldsWrapper');
-                if (toggle && wrapper) {
-                    wrapper.style.display = toggle.checked ? 'block' : 'none';
-                }
-            }
-
-            function toggleZapierFields() {
-                const toggle = document.getElementById('enableZapierToggle');
-                const wrapper = document.getElementById('zapierFieldsWrapper');
-                if (toggle && wrapper) {
-                    wrapper.style.display = toggle.checked ? 'block' : 'none';
                 }
             }
 
