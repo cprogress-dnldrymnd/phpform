@@ -1083,8 +1083,7 @@ footer {
   color: var(--white);
   line-height: 1.4;
 }
-.market-right {
-}
+
 .market-drivers {
   list-style: none;
   margin-bottom: 2rem;
@@ -1275,7 +1274,36 @@ footer {
     display: none;
   }
 }
-
+.collapsible-container {
+  margin-top: 1rem;
+}
+.collapsible-header {
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  padding: 1rem;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-radius: 4px;
+  font-weight: 600;
+}
+.collapsible-header:hover {
+  background: #f1f5f9;
+}
+.collapsible-content {
+  display: none;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 4px 4px;
+  background: #fff;
+}
+.collapsible-header::after {
+  content: "▼";
+  font-size: 0.7rem;
+  color: #64748b;
+}
 /* * -------------------------------------------------------------
  * Paste your existing main CSS here (Nav, Hero, Grid, etc.)
  * -------------------------------------------------------------
