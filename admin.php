@@ -266,6 +266,7 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
         input[type="text"],
         input[type="password"],
         input[type="url"],
+        input[type="number"],
         textarea,
         select {
             width: 100%;
