@@ -92,7 +92,7 @@ if (isset($_POST['update_settings']) && isset($_SESSION['logged_in'])) {
     $config['zapier_enabled']       = isset($_POST['zapier_enabled']) ? true : false;
     $config['zapier_webhook_url']   = filter_var($_POST['zapier_webhook_url'], FILTER_SANITIZE_URL);
     // Note: Do not strip tags from the payload to preserve valid JSON characters.
-    $config['zapier_payload']       = isset($_POST['zapier_payload']) ? $_POST['zapier_payload'] : '';
+    $config['zapier_payload']     = isset($_POST['zapier_json_payload']) ? $_POST['zapier_json_payload'] : '{}';
 
     if (isset($_POST['email_templates_json'])) {
         $templates = json_decode($_POST['email_templates_json'], true);
