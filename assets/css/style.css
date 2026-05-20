@@ -1352,7 +1352,7 @@ footer {
   pointer-events: none;
 }
 
-@media (max-width: 575px) {
+@media (max-width: 767px) {
   .payloads-note {
     text-align: left;
     max-width: 100%;
