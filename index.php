@@ -248,7 +248,7 @@ if (file_exists($config_file)) {
         <p>Fly and operate payloads from the standard RC. Swap modules in under 5 seconds between sorties. One aircraft — infinite mission sets.</p>
       </div>
     </div>
-    <div style="text-align: center;">
+    <div style="text-align: center; margin-top: 2rem;">
       <a href="#download" class="btn-primary">Download Full Payload Specs</a>
     </div>
   </div>
