@@ -152,7 +152,7 @@ if (file_exists($active_csv_path) && filesize($active_csv_path) > 0 && ($handle 
     fclose($handle);
 }
 if (empty($dynamic_form_tokens)) {
-    $dynamic_form_tokens = ['{full_name}', '{work_email}', '{org_type}', '{phone}'];
+    $dynamic_form_tokens = ['{full_name}', '{email}', '{sector}', '{phone}'];
 }
 $system_tokens = ['{download_link}', '{download_button}'];
 $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
@@ -914,8 +914,8 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
 
                 let processedHtml = htmlString
                     .replace(/{full_name}/g, 'James Morton')
-                    .replace(/{work_email}/g, 'james@police.uk')
-                    .replace(/{org_type}/g, 'Police Aviation Unit')
+                    .replace(/{email}/g, 'james@police.uk')
+                    .replace(/{sector}/g, 'Police Aviation Unit')
                     .replace(/{phone}/g, '+44 7700 900077')
                     .replace(/{download_link}/g, isAttachmentEnabled ? currentUrl : '')
                     .replace(/{download_button}/g, mockButton);
