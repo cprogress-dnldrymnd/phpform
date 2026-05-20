@@ -463,11 +463,7 @@ if (file_exists($config_file)) {
     <p class="footer-copy">© 2026 Tundra Drone Technologies AS. All rights reserved. Tundra® is a registered trademark.<br>Distributed in the UK exclusively by Coptrz Ltd. Specifications subject to change.</p>
   </div>
   <div class="footer-links">
-    <a href="#">All Drones</a>
-    <a href="#">Training &amp; GVC</a>
-    <a href="#">Enterprise</a>
-    <a href="#">Contact</a>
-    <a href="#">Privacy</a>
+    <a href="https://coptrz.com/privacy-policy" target="_blank">Privacy</a>
   </div>
 </footer>
 <script>
