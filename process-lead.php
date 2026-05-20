@@ -1,4 +1,5 @@
 <?php
+
 /**
  * AJAX Endpoint for processing dynamic lead form submissions.
  * Incorporates reCAPTCHA v3 cURL validation, dynamic CSV logging,
@@ -23,7 +24,7 @@ $config = json_decode(file_get_contents($config_file), true);
 // 1. Google reCAPTCHA v3 Verification
 if (isset($config['recaptcha_enabled']) && $config['recaptcha_enabled']) {
     $recaptcha_response = isset($_POST['g-recaptcha-response']) ? $_POST['g-recaptcha-response'] : '';
-    
+
     if (empty($recaptcha_response)) {
         echo json_encode(['success' => false, 'message' => 'Security check failed. Please refresh and try again.']);
         exit;
@@ -41,7 +42,7 @@ if (isset($config['recaptcha_enabled']) && $config['recaptcha_enabled']) {
     curl_close($ch);
 
     $response_data = json_decode($verify_response);
-    
+
     if (!$response_data->success || $response_data->score < 0.5) {
         echo json_encode(['success' => false, 'message' => 'Automated bot activity detected. Request denied.']);
         exit;
@@ -56,10 +57,10 @@ $csv_values  = [date('Y-m-d H:i:s')];
 $reply_to    = '';
 
 foreach ($_POST as $key => $value) {
-    if ($key === 'g-recaptcha-response') continue; 
+    if ($key === 'g-recaptcha-response') continue;
 
     $safe_key = htmlspecialchars(strip_tags($key));
-    
+
     if (is_array($value)) {
         $safe_val = implode(', ', array_map('htmlspecialchars', array_map('strip_tags', $value)));
     } else {
@@ -87,17 +88,17 @@ if (isset($config['enable_csv_logging']) && $config['enable_csv_logging']) {
     if (substr($filename, -4) !== '.csv') {
         $filename .= '.csv';
     }
-    
+
     $csv_file = __DIR__ . '/assets/data/' . $filename;
     $csv_dir  = dirname($csv_file);
-    
+
     if (!is_dir($csv_dir)) {
         mkdir($csv_dir, 0755, true);
     }
 
     $needs_headers = !file_exists($csv_file) || filesize($csv_file) === 0;
     $fp = fopen($csv_file, 'a');
-    
+
     if ($fp) {
         if ($needs_headers) {
             fputcsv($fp, $csv_headers);
@@ -119,12 +120,12 @@ if ($download_url !== '' && !preg_match('~^(?:f|ht)tps?://~i', $download_url)) {
     $download_url = $protocol . $host . $base_dir . '/' . ltrim($download_url, '/');
 }
 
-$button_text = (isset($config['download_button_text']) && trim($config['download_button_text']) !== '') 
-    ? trim($config['download_button_text']) 
+$button_text = (isset($config['download_button_text']) && trim($config['download_button_text']) !== '')
+    ? trim($config['download_button_text'])
     : 'Download Payload Specs';
 
-$download_button = $download_url 
-    ? '<a href="' . htmlspecialchars($download_url) . '" style="display: inline-block; background-color: #2DA1FF; color: #0a0a0a; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif; font-size: 14px;">' . htmlspecialchars($button_text) . '</a>' 
+$download_button = $download_url
+    ? '<a href="' . htmlspecialchars($download_url) . '" style="display: inline-block; background-color: #2DA1FF; color: #0a0a0a; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif; font-size: 14px;">' . htmlspecialchars($button_text) . '</a>'
     : '';
 
 $search[] = '{download_link}';
@@ -135,15 +136,15 @@ $replace[] = $download_button;
 
 // 5. Zapier Webhook Integration
 if (isset($config['zapier_enabled']) && $config['zapier_enabled'] && !empty($config['zapier_webhook_url'])) {
-    
+
     $zapier_url = $config['zapier_webhook_url'];
     $zapier_template = isset($config['zapier_payload']) && !empty(trim($config['zapier_payload'])) ? $config['zapier_payload'] : '{}';
-    
+
     // Safely parse JSON template to prevent syntax breakage from user input quotes
     $zapier_data = json_decode($zapier_template, true);
-    
+
     if (is_array($zapier_data)) {
-        array_walk_recursive($zapier_data, function(&$item, $key) use ($search, $replace) {
+        array_walk_recursive($zapier_data, function (&$item, $key) use ($search, $replace) {
             if (is_string($item)) {
                 $item = str_replace($search, $replace, $item);
             }
@@ -153,7 +154,7 @@ if (isset($config['zapier_enabled']) && $config['zapier_enabled'] && !empty($con
         // Fallback to raw string replacement if the admin provided an invalid JSON format
         $zapier_json_safe = str_replace($search, $replace, $zapier_template);
     }
-    
+
     $ch_z = curl_init($zapier_url);
     curl_setopt($ch_z, CURLOPT_CUSTOMREQUEST, "POST");
     curl_setopt($ch_z, CURLOPT_POSTFIELDS, $zapier_json_safe);
@@ -164,6 +165,10 @@ if (isset($config['zapier_enabled']) && $config['zapier_enabled'] && !empty($con
         'Content-Length: ' . strlen($zapier_json_safe)
     ]);
     curl_exec($ch_z);
+    // Debugging: Log curl errors
+    if (curl_errno($ch_z)) {
+        error_log('Zapier Webhook Error: ' . curl_error($ch_z));
+    }
     curl_close($ch_z);
 }
 
@@ -178,11 +183,11 @@ $templates = isset($config['email_templates']) ? $config['email_templates'] : []
 
 foreach ($templates as $tpl) {
     $to = str_replace($search, $replace, $tpl['to']);
-    
+
     if (filter_var($to, FILTER_VALIDATE_EMAIL)) {
         $subject = str_replace($search, $replace, $tpl['subject']);
         $body    = str_replace($search, $replace, $tpl['body']);
-        
+
         mail($to, $subject, $body, $headers);
     }
 }
