@@ -1342,4 +1342,7 @@ footer {
   .hero {
     min-height: unset;
   }
+  .lead-form-card {
+    padding: 2rem;
+  }
 }
