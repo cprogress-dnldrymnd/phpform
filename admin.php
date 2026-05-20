@@ -105,6 +105,13 @@ if (isset($_POST['update_settings']) && isset($_SESSION['logged_in'])) {
         $config['admin_password'] = $_POST['new_password'];
     }
 
+
+    $config['smtp_enabled']      = isset($_POST['smtp_enabled']) ? true : false;
+    $config['smtp_host']         = htmlspecialchars($_POST['smtp_host']);
+    $config['smtp_port']         = (int)$_POST['smtp_port'];
+    $config['smtp_user']         = htmlspecialchars($_POST['smtp_user']);
+    $config['smtp_pass']         = htmlspecialchars($_POST['smtp_pass']);
+
     save_config($config_file, $config);
     $success = 'Settings updated successfully.';
 }
@@ -647,6 +654,20 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
                             <label>Payload Mapping</label>
                             <div id="zapierRepeaterContainer" style="margin-bottom: 1rem;"></div>
                             <button type="button" class="btn-secondary" onclick="addZapierRow()">+ Add Mapping Field</button>
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="background: #fff; padding: 1rem; border: 1px solid var(--border); border-radius: 4px; margin-top: 1.5rem;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; margin-bottom: 0.75rem;">
+                            <input type="checkbox" name="smtp_enabled" id="enableSmtpToggle" value="1" <?php echo (isset($config['smtp_enabled']) && $config['smtp_enabled']) ? 'checked' : ''; ?> onchange="toggleSmtpFields()">
+                            <span style="font-size: 1rem;">Enable SMTP Mailer (SendGrid/Other)</span>
+                        </label>
+
+                        <div id="smtpFieldsWrapper" style="<?php echo (isset($config['smtp_enabled']) && $config['smtp_enabled']) ? 'display: block;' : 'display: none;'; ?>">
+                            <div class="form-group"><label>SMTP Host (e.g., smtp.sendgrid.net)</label><input type="text" name="smtp_host" value="<?php echo htmlspecialchars($config['smtp_host'] ?? 'smtp.sendgrid.net'); ?>"></div>
+                            <div class="form-group"><label>SMTP Port (e.g., 587)</label><input type="number" name="smtp_port" value="<?php echo (int)($config['smtp_port'] ?? 587); ?>"></div>
+                            <div class="form-group"><label>SMTP Username (e.g., apikey)</label><input type="text" name="smtp_user" value="<?php echo htmlspecialchars($config['smtp_user'] ?? ''); ?>"></div>
+                            <div class="form-group"><label>SMTP Password (API Key)</label><input type="password" name="smtp_pass" value="<?php echo htmlspecialchars($config['smtp_pass'] ?? ''); ?>"></div>
                         </div>
                     </div>
 

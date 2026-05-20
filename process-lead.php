@@ -176,32 +176,46 @@ $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
 
 $templates = isset($config['email_templates']) ? $config['email_templates'] : [];
 
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
+// Load PHPMailer (ensure paths match your folder structure)
+require 'includes/phpmailer/src/Exception.php';
+require 'includes/phpmailer/src/PHPMailer.php';
+require 'includes/phpmailer/src/SMTP.php';
+
 // Replace the email dispatch loop in process-lead.php with this:
 foreach ($templates as $tpl) {
     $to = str_replace($search, $replace, $tpl['to']);
-
+    
     if (filter_var($to, FILTER_VALIDATE_EMAIL)) {
-        // Construct Dynamic Headers
-        $fromName  = !empty($tpl['from_name']) ? str_replace($search, $replace, $tpl['from_name']) : 'System';
-        $fromEmail = !empty($tpl['from_email']) ? str_replace($search, $replace, $tpl['from_email']) : 'no-reply@' . $_SERVER['SERVER_NAME'];
-
-        $headers  = "From: $fromName <$fromEmail>\r\n";
-        $headers .= "Reply-To: " . $reply_to . "\r\n";
-
-        if (!empty($tpl['cc']))  $headers .= "Cc: " . str_replace($search, $replace, $tpl['cc']) . "\r\n";
-        if (!empty($tpl['bcc'])) $headers .= "Bcc: " . str_replace($search, $replace, $tpl['bcc']) . "\r\n";
-        if (!empty($tpl['headers'])) $headers .= str_replace($search, $replace, $tpl['headers']) . "\r\n";
-
-        $headers .= "MIME-Version: 1.0\r\n";
-        $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
-
         $subject = str_replace($search, $replace, $tpl['subject']);
         $body    = str_replace($search, $replace, $tpl['body']);
+        
+        if (isset($config['smtp_enabled']) && $config['smtp_enabled']) {
+            // SMTP Sending
+            $mail = new PHPMailer(true);
+            $mail->isSMTP();
+            $mail->Host       = $config['smtp_host'];
+            $mail->SMTPAuth   = true;
+            $mail->Username   = $config['smtp_user'];
+            $mail->Password   = $config['smtp_pass'];
+            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+            $mail->Port       = $config['smtp_port'];
 
-        mail($to, $subject, $body, $headers);
+            $mail->setFrom($config['smtp_user'] === 'apikey' ? 'your-verified-email@domain.com' : $config['smtp_user'], $tpl['from_name']);
+            $mail->addAddress($to);
+            $mail->isHTML(true);
+            $mail->Subject = $subject;
+            $mail->Body    = $body;
+            $mail->send();
+        } else {
+            // Standard mail() fallback
+            $headers = "MIME-Version: 1.0\r\nContent-Type: text/html; charset=UTF-8\r\n";
+            mail($to, $subject, $body, $headers);
+        }
     }
 }
-
 // 7. Dynamic Success Messaging
 $has_auto_download = ($has_attachment && $download_url !== '' && in_array($download_method, ['auto', 'both']));
 $base_success_msg  = isset($config['success_message']) ? $config['success_message'] : 'Success! Your request has been processed.';
