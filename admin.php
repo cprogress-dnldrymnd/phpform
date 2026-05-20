@@ -497,6 +497,7 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
             border: 1px solid var(--border);
             border-radius: 4px;
         }
+
         .collapsible-header {
             padding: 1rem;
             display: flex;
@@ -508,25 +509,31 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
             border-bottom: 1px solid transparent;
             border-radius: 4px;
         }
+
         .collapsible-header:hover {
             background: #f1f5f9;
         }
+
         .collapsible-header.expanded {
             border-bottom-color: var(--border);
             border-radius: 4px 4px 0 0;
         }
+
         .collapsible-content {
             display: none;
             padding: 1rem;
         }
+
         .header-checkbox {
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            font-weight: normal;
+            font-weight: 600;
+            /* Changed from normal to 600 */
             margin: 0;
             cursor: pointer;
         }
+
         .collapsible-header::after {
             content: '▼';
             font-size: 0.8rem;
@@ -534,9 +541,11 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
             margin-left: 1rem;
             transition: transform 0.2s;
         }
+
         .collapsible-header.expanded::after {
             transform: rotate(180deg);
         }
+
         .header-left {
             display: flex;
             align-items: center;
@@ -681,12 +690,9 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
 
                     <div class="collapsible-container">
                         <div class="collapsible-header" onclick="toggleCollapsible(this)">
-                            <div class="header-left">
-                                <span>Google reCAPTCHA v3 Protection</span>
-                            </div>
                             <label class="header-checkbox" onclick="event.stopPropagation()">
                                 <input type="checkbox" name="recaptcha_enabled" value="1" <?php echo (isset($config['recaptcha_enabled']) && $config['recaptcha_enabled']) ? 'checked' : ''; ?>>
-                                Enable
+                                Enable Google reCAPTCHA v3 Protection
                             </label>
                         </div>
                         <div class="collapsible-content">
@@ -703,12 +709,9 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
 
                     <div class="collapsible-container">
                         <div class="collapsible-header" onclick="toggleCollapsible(this)">
-                            <div class="header-left">
-                                <span>Zapier Webhook Integration</span>
-                            </div>
                             <label class="header-checkbox" onclick="event.stopPropagation()">
                                 <input type="checkbox" name="zapier_enabled" value="1" <?php echo (isset($config['zapier_enabled']) && $config['zapier_enabled']) ? 'checked' : ''; ?>>
-                                Enable
+                                Enable Zapier Webhook Integration
                             </label>
                         </div>
                         <div class="collapsible-content">
@@ -725,12 +728,9 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
 
                     <div class="collapsible-container">
                         <div class="collapsible-header" onclick="toggleCollapsible(this)">
-                            <div class="header-left">
-                                <span>SMTP Mailer (SendGrid/Other)</span>
-                            </div>
                             <label class="header-checkbox" onclick="event.stopPropagation()">
                                 <input type="checkbox" name="smtp_enabled" value="1" <?php echo (isset($config['smtp_enabled']) && $config['smtp_enabled']) ? 'checked' : ''; ?>>
-                                Enable
+                                Enable SMTP Mailer (SendGrid/Other)
                             </label>
                         </div>
                         <div class="collapsible-content">
