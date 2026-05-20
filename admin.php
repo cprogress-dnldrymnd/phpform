@@ -623,25 +623,23 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
 
                 <div id="tab-integrations" class="tab-content <?php echo $active_tab === 'tab-integrations' ? 'active' : ''; ?>">
 
-                <div class="collapsible-container">
-    <div class="collapsible-header" onclick="toggleCollapsible(this)">
-        <span>Google reCAPTCHA v3</span>
-        <label style="margin:0; cursor:pointer;" onclick="event.stopPropagation()">
-            <input type="checkbox" name="recaptcha_enabled" id="enableRecaptchaToggle" value="1" <?php echo (isset($config['recaptcha_enabled']) && $config['recaptcha_enabled']) ? 'checked' : ''; ?>>
-            Enable
-        </label>
-    </div>
-    <div class="collapsible-content">
-        <div class="form-group">
-            <label>Site Key</label>
-            <input type="text" name="recaptcha_site_key" value="<?php echo htmlspecialchars($config['recaptcha_site_key'] ?? ''); ?>">
-        </div>
-        <div class="form-group">
-            <label>Secret Key</label>
-            <input type="password" name="recaptcha_secret_key" value="<?php echo htmlspecialchars($config['recaptcha_secret_key'] ?? ''); ?>">
-        </div>
-    </div>
-</div>
+                    <div class="form-group" style="background: #fff; padding: 1rem; border: 1px solid var(--border); border-radius: 4px;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; margin-bottom: 0.75rem;">
+                            <input type="checkbox" name="recaptcha_enabled" id="enableRecaptchaToggle" value="1" <?php echo (isset($config['recaptcha_enabled']) && $config['recaptcha_enabled']) ? 'checked' : ''; ?> onchange="toggleRecaptchaFields()">
+                            <span style="font-size: 1rem;">Enable Google reCAPTCHA v3 Protection</span>
+                        </label>
+
+                        <div id="recaptchaFieldsWrapper" style="<?php echo (isset($config['recaptcha_enabled']) && $config['recaptcha_enabled']) ? 'display: block;' : 'display: none;'; ?>">
+                            <div class="form-group" style="margin-top: 1rem;">
+                                <label>Site Key</label>
+                                <input type="text" name="recaptcha_site_key" value="<?php echo htmlspecialchars(isset($config['recaptcha_site_key']) ? $config['recaptcha_site_key'] : ''); ?>" placeholder="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI">
+                            </div>
+                            <div class="form-group">
+                                <label>Secret Key</label>
+                                <input type="password" name="recaptcha_secret_key" value="<?php echo htmlspecialchars(isset($config['recaptcha_secret_key']) ? $config['recaptcha_secret_key'] : ''); ?>" placeholder="6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe">
+                            </div>
+                        </div>
+                    </div>
 
                     <div class="form-group" style="background: #fff; padding: 1rem; border: 1px solid var(--border); border-radius: 4px; margin-top: 1.5rem;">
                         <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; margin-bottom: 0.75rem;">
@@ -790,11 +788,7 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
                     }, 1000);
                 });
             }
-
-            function toggleCollapsible(el) {
-                const content = el.nextElementSibling;
-                content.style.display = (content.style.display === 'block') ? 'none' : 'block';
-            }
+            
 
             function toggleSmtpFields() {
                 const toggle = document.getElementById('enableSmtpToggle');
