@@ -136,7 +136,7 @@ $replace[] = $download_button;
 
 // 5. Zapier Webhook Integration
 if (isset($config['zapier_enabled']) && $config['zapier_enabled'] && !empty($config['zapier_webhook_url'])) {
-        error_log('mam mo');
+    error_log('mam mo');
 
     $zapier_url = $config['zapier_webhook_url'];
     $zapier_template = isset($config['zapier_payload']) && !empty(trim($config['zapier_payload'])) ? $config['zapier_payload'] : '{}';
@@ -155,7 +155,6 @@ if (isset($config['zapier_enabled']) && $config['zapier_enabled'] && !empty($con
         // Fallback to raw string replacement if the admin provided an invalid JSON format
         $zapier_json_safe = str_replace($search, $replace, $zapier_template);
     }
-        error_log('zapier_json_safe: ' . $zapier_json_safe);
 
     $ch_z = curl_init($zapier_url);
     curl_setopt($ch_z, CURLOPT_CUSTOMREQUEST, "POST");
@@ -168,7 +167,6 @@ if (isset($config['zapier_enabled']) && $config['zapier_enabled'] && !empty($con
     ]);
     curl_exec($ch_z);
     // Debugging: Log curl errors
-        error_log('ch_z: ' . var_dump($ch_z));
 
     if (curl_errno($ch_z)) {
         error_log('Zapier Webhook Error: ' . curl_error($ch_z));
