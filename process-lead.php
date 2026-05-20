@@ -163,7 +163,10 @@ if (isset($config['zapier_enabled']) && $config['zapier_enabled'] && !empty($con
         'Content-Type: application/json',
         'Content-Length: ' . strlen($zapier_json_safe)
     ]);
-  // DEBUG LOG: Write the response to a file in your assets/data folder
+  $result = curl_exec($ch_z);
+    $http_code = curl_getinfo($ch_z, CURLINFO_HTTP_CODE);
+    
+    // DEBUG LOG: Write the response to a file in your assets/data folder
     file_put_contents(__DIR__ . '/assets/data/zapier_debug.log', 
         "[" . date('Y-m-d H:i:s') . "] Status: $http_code | Payload: $zapier_json_safe | Response: $result" . PHP_EOL, 
         FILE_APPEND
