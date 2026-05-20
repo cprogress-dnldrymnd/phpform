@@ -118,7 +118,7 @@ if (isset($_POST['update_settings']) && isset($_SESSION['logged_in'])) {
     if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
         header('Content-Type: application/json');
         echo json_encode(['success' => true, 'message' => 'Settings deployed successfully.']);
-        exit; // Stop executing PHP so we return clean JSON
+        exit;
     }
     // -----------------------------
 
@@ -467,7 +467,7 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
             margin-top: 1rem;
             transition: opacity 0.2s;
         }
-        
+
         .btn-primary:disabled {
             opacity: 0.7;
             cursor: not-allowed;
@@ -507,6 +507,7 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
             border: 1px solid var(--border);
             border-radius: 4px;
         }
+
         .collapsible-header {
             padding: 1rem;
             display: flex;
@@ -518,17 +519,21 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
             border-bottom: 1px solid transparent;
             border-radius: 4px;
         }
+
         .collapsible-header:hover {
             background: #f1f5f9;
         }
+
         .collapsible-header.expanded {
             border-bottom-color: var(--border);
             border-radius: 4px 4px 0 0;
         }
+
         .collapsible-content {
             display: none;
             padding: 1rem;
         }
+
         .header-checkbox {
             display: flex;
             align-items: center;
@@ -537,6 +542,7 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
             margin: 0;
             cursor: pointer;
         }
+
         .collapsible-header::after {
             content: '▼';
             font-size: 0.8rem;
@@ -544,6 +550,7 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
             margin-left: 1rem;
             transition: transform 0.2s;
         }
+
         .collapsible-header.expanded::after {
             transform: rotate(180deg);
         }
@@ -566,6 +573,7 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
             transition: all 0.3s ease;
             pointer-events: none;
         }
+
         #ajaxToast.show {
             opacity: 1;
             transform: translateY(0);
@@ -605,12 +613,13 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
                 <button class="tab-btn <?php echo $active_tab === 'tab-emails' ? 'active' : ''; ?>" onclick="switchTab(event, 'tab-emails')">Email Builder</button>
                 <button class="tab-btn <?php echo $active_tab === 'tab-integrations' ? 'active' : ''; ?>" onclick="switchTab(event, 'tab-integrations')">Integrations</button>
                 <button class="tab-btn <?php echo $active_tab === 'tab-leads' ? 'active' : ''; ?>" onclick="switchTab(event, 'tab-leads')">Lead Data</button>
+                <button class="tab-btn <?php echo $active_tab === 'tab-account' ? 'active' : ''; ?>" onclick="switchTab(event, 'tab-account')">Account Settings</button>
             </div>
 
             <form method="POST" id="mainForm">
                 <input type="hidden" name="email_templates_json" id="emailTemplatesJson">
                 <input type="hidden" name="zapier_json_payload" id="zapierJsonPayload">
-                
+
                 <div id="tab-form" class="tab-content <?php echo $active_tab === 'tab-form' ? 'active' : ''; ?>">
 
                     <div class="form-group">
@@ -619,64 +628,58 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
                         <small>The message displayed on the frontend after a successful submission. All tokens (including <code>{download_link}</code>) are supported.</small>
                     </div>
 
-                    <div class="form-group" style="background: #fff; padding: 1rem; border: 1px solid var(--border); border-radius: 4px;">
-                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; margin-bottom: 0.75rem;">
-                            <input type="checkbox" name="enable_csv_logging" id="enableCsvToggle" value="1" <?php echo (isset($config['enable_csv_logging']) && $config['enable_csv_logging']) ? 'checked' : ''; ?> onchange="toggleCsvFields()">
-                            <span style="font-size: 1rem;">Enable CSV Lead Logging</span>
-                        </label>
-
-                        <div id="csvFieldsWrapper" style="<?php echo (isset($config['enable_csv_logging']) && $config['enable_csv_logging']) ? 'display: block;' : 'display: none;'; ?>">
-                            <label style="margin-top: 1rem;">CSV File Name</label>
-                            <input type="text" name="csv_file_name" value="<?php echo htmlspecialchars($active_csv_setting); ?>" placeholder="leads.csv">
-                            <small>Automatically saved into the <code>assets/data/</code> directory.</small>
+                    <div class="collapsible-container">
+                        <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                            <label class="header-checkbox" onclick="event.stopPropagation()">
+                                <input type="checkbox" name="enable_csv_logging" id="enableCsvToggle" value="1" <?php echo (isset($config['enable_csv_logging']) && $config['enable_csv_logging']) ? 'checked' : ''; ?>>
+                                Enable CSV Lead Logging
+                            </label>
+                        </div>
+                        <div class="collapsible-content">
+                            <div class="form-group">
+                                <label>CSV File Name</label>
+                                <input type="text" name="csv_file_name" value="<?php echo htmlspecialchars($active_csv_setting); ?>" placeholder="leads.csv">
+                                <small>Automatically saved into the <code>assets/data/</code> directory.</small>
+                            </div>
                         </div>
                     </div>
 
-                    <hr style="margin: 2rem 0; border: 0; border-top: 1px solid var(--border);">
-
-                    <div class="form-group" style="background: #fff; padding: 1rem; border: 1px solid var(--border); border-radius: 4px;">
-                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; margin: 0;">
-                            <input type="checkbox" name="has_attachment" id="hasAttachmentToggle" value="1" <?php echo (!isset($config['has_attachment']) || $config['has_attachment']) ? 'checked' : ''; ?> onchange="toggleAttachmentFields()">
-                            <span style="font-size: 1rem;">Enable File Attachment & Downloads</span>
-                        </label>
-                    </div>
-
-                    <div id="attachmentFieldsWrapper" style="<?php echo (isset($config['has_attachment']) && !$config['has_attachment']) ? 'display: none;' : 'display: block;'; ?>">
-                        <div class="form-group">
-                            <label>Delivery Method</label>
-                            <select name="download_method" id="downloadMethodSelect" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 4px; font-family: inherit;">
-                                <option value="both" <?php echo (!isset($config['download_method']) || $config['download_method'] === 'both') ? 'selected' : ''; ?>>Both: Auto-Download in Browser + Email Tokens</option>
-                                <option value="auto" <?php echo (isset($config['download_method']) && $config['download_method'] === 'auto') ? 'selected' : ''; ?>>Auto-Download Only</option>
-                                <option value="email" <?php echo (isset($config['download_method']) && $config['download_method'] === 'email') ? 'selected' : ''; ?>>Email Tokens Only</option>
-                            </select>
+                    <div class="collapsible-container">
+                        <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                            <label class="header-checkbox" onclick="event.stopPropagation()">
+                                <input type="checkbox" name="has_attachment" id="hasAttachmentToggle" value="1" <?php echo (!isset($config['has_attachment']) || $config['has_attachment']) ? 'checked' : ''; ?> onchange="triggerGlobalPreviewRefresh()">
+                                Enable File Attachment & Downloads
+                            </label>
                         </div>
+                        <div class="collapsible-content">
+                            <div class="form-group">
+                                <label>Delivery Method</label>
+                                <select name="download_method" id="downloadMethodSelect" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 4px; font-family: inherit;">
+                                    <option value="both" <?php echo (!isset($config['download_method']) || $config['download_method'] === 'both') ? 'selected' : ''; ?>>Both: Auto-Download in Browser + Email Tokens</option>
+                                    <option value="auto" <?php echo (isset($config['download_method']) && $config['download_method'] === 'auto') ? 'selected' : ''; ?>>Auto-Download Only</option>
+                                    <option value="email" <?php echo (isset($config['download_method']) && $config['download_method'] === 'email') ? 'selected' : ''; ?>>Email Tokens Only</option>
+                                </select>
+                            </div>
 
-                        <div class="form-group">
-                            <label>File Download URL</label>
-                            <select name="download_url" id="globalDownloadUrl" onchange="triggerGlobalPreviewRefresh()">
-                                <option value="">-- Select an available file --</option>
-                                <?php foreach ($local_files as $file): ?>
-                                    <option value="<?php echo htmlspecialchars($file); ?>" <?php echo (isset($config['download_url']) && $config['download_url'] === $file) ? 'selected' : ''; ?>>
-                                        <?php echo htmlspecialchars(basename($file)); ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                            <small>Select a file from the <code>assets/downloads/</code> directory. This populates the <code>{download_link}</code> and <code>{download_button}</code> tokens.</small>
+                            <div class="form-group">
+                                <label>File Download URL</label>
+                                <select name="download_url" id="globalDownloadUrl" onchange="triggerGlobalPreviewRefresh()">
+                                    <option value="">-- Select an available file --</option>
+                                    <?php foreach ($local_files as $file): ?>
+                                        <option value="<?php echo htmlspecialchars($file); ?>" <?php echo (isset($config['download_url']) && $config['download_url'] === $file) ? 'selected' : ''; ?>>
+                                            <?php echo htmlspecialchars(basename($file)); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <small>Select a file from the <code>assets/downloads/</code> directory. This populates the <code>{download_link}</code> and <code>{download_button}</code> tokens.</small>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Email Button Text</label>
+                                <input type="text" name="download_button_text" id="globalButtonText" value="<?php echo htmlspecialchars(isset($config['download_button_text']) ? $config['download_button_text'] : 'Download Payload Specs'); ?>" oninput="triggerGlobalPreviewRefresh()">
+                                <small>The text displayed inside the <code>{download_button}</code> token.</small>
+                            </div>
                         </div>
-
-                        <div class="form-group">
-                            <label>Email Button Text</label>
-                            <input type="text" name="download_button_text" id="globalButtonText" value="<?php echo htmlspecialchars(isset($config['download_button_text']) ? $config['download_button_text'] : 'Download Payload Specs'); ?>" oninput="triggerGlobalPreviewRefresh()">
-                            <small>The text displayed inside the <code>{download_button}</code> token.</small>
-                        </div>
-                    </div>
-
-                    <hr style="margin: 2rem 0; border: 0; border-top: 1px solid var(--border);">
-
-                    <div class="form-group" style="max-width: 400px;">
-                        <label>Change Admin Password (leave blank to keep current)</label>
-                        <input type="text" name="decoy_username" style="display:none;" aria-hidden="true" autocomplete="username" tabindex="-1">
-                        <input type="password" name="new_password" autocomplete="new-password">
                     </div>
 
                     <div style="margin-top: 2rem;">
@@ -785,6 +788,18 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
                         <button type="submit" name="update_settings" class="btn-primary">Deploy Settings</button>
                     </div>
                 </div>
+
+                <div id="tab-account" class="tab-content <?php echo $active_tab === 'tab-account' ? 'active' : ''; ?>">
+                    <div class="form-group" style="max-width: 400px;">
+                        <label>Change Admin Password</label>
+                        <input type="text" name="decoy_username" style="display:none;" aria-hidden="true" autocomplete="username" tabindex="-1">
+                        <input type="password" name="new_password" autocomplete="new-password" placeholder="Leave blank to keep current password">
+                    </div>
+
+                    <div style="margin-top: 2rem;">
+                        <button type="submit" name="update_settings" class="btn-primary">Deploy Settings</button>
+                    </div>
+                </div>
             </form>
 
             <div id="tab-leads" class="tab-content <?php echo $active_tab === 'tab-leads' ? 'active' : ''; ?>">
@@ -873,7 +888,7 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
 
                     // 2. Prepare Data for AJAX
                     const formData = new FormData(this);
-                    formData.append('update_settings', '1'); 
+                    formData.append('update_settings', '1');
 
                     // 3. UI Feedback - Disable buttons and change text
                     const submitBtns = this.querySelectorAll('button[type="submit"]');
@@ -885,29 +900,29 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
 
                     // 4. Send via Fetch API
                     fetch(window.location.href, {
-                        method: 'POST',
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest'
-                        },
-                        body: formData
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            showToast(data.message);
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Save Error:', error);
-                        alert('A network error occurred while saving.');
-                    })
-                    .finally(() => {
-                        // Restore button states
-                        submitBtns.forEach(btn => {
-                            btn.innerText = btn.dataset.originalText;
-                            btn.disabled = false;
+                            method: 'POST',
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest'
+                            },
+                            body: formData
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                showToast(data.message);
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Save Error:', error);
+                            alert('A network error occurred while saving.');
+                        })
+                        .finally(() => {
+                            // Restore button states
+                            submitBtns.forEach(btn => {
+                                btn.innerText = btn.dataset.originalText;
+                                btn.disabled = false;
+                            });
                         });
-                    });
                 });
             }
 
@@ -917,7 +932,7 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
                 if (toast) {
                     toast.innerText = message;
                     toast.classList.add('show');
-                    
+
                     // Hide after 3 seconds
                     setTimeout(() => {
                         toast.classList.remove('show');
@@ -947,23 +962,6 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
                 const content = el.nextElementSibling;
                 el.classList.toggle('expanded');
                 content.style.display = (content.style.display === 'block') ? 'none' : 'block';
-            }
-
-            function toggleCsvFields() {
-                const toggle = document.getElementById('enableCsvToggle');
-                const wrapper = document.getElementById('csvFieldsWrapper');
-                if (toggle && wrapper) {
-                    wrapper.style.display = toggle.checked ? 'block' : 'none';
-                }
-            }
-
-            function toggleAttachmentFields() {
-                const toggle = document.getElementById('hasAttachmentToggle');
-                const wrapper = document.getElementById('attachmentFieldsWrapper');
-                if (toggle && wrapper) {
-                    wrapper.style.display = toggle.checked ? 'block' : 'none';
-                    triggerGlobalPreviewRefresh();
-                }
             }
 
             function switchTab(evt, tabId) {
@@ -1135,7 +1133,10 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
             }
 
             function addZapierRow() {
-                zapierState.push({ key: '', value: '' });
+                zapierState.push({
+                    key: '',
+                    value: ''
+                });
                 renderZapierRepeater();
             }
 
