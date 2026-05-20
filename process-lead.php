@@ -136,6 +136,7 @@ $replace[] = $download_button;
 
 // 5. Zapier Webhook Integration
 if (isset($config['zapier_enabled']) && $config['zapier_enabled'] && !empty($config['zapier_webhook_url'])) {
+        error_log('mam mo');
 
     $zapier_url = $config['zapier_webhook_url'];
     $zapier_template = isset($config['zapier_payload']) && !empty(trim($config['zapier_payload'])) ? $config['zapier_payload'] : '{}';
