@@ -5,6 +5,8 @@
  * Incorporates reCAPTCHA v3 cURL validation, dynamic CSV logging,
  * Zapier webhook routing, email template parsing, and dynamic success messaging.
  */
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
 
 header('Content-Type: application/json');
 
@@ -176,22 +178,22 @@ $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
 
 $templates = isset($config['email_templates']) ? $config['email_templates'] : [];
 
-use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\Exception;
 
-// Load PHPMailer (ensure paths match your folder structure)
-require 'includes/phpmailer/src/Exception.php';
-require 'includes/phpmailer/src/PHPMailer.php';
-require 'includes/phpmailer/src/SMTP.php';
+if (isset($config['smtp_enabled']) && $config['smtp_enabled']) {
+    // Load PHPMailer (ensure paths match your folder structure)
+    require 'includes/phpmailer/src/Exception.php';
+    require 'includes/phpmailer/src/PHPMailer.php';
+    require 'includes/phpmailer/src/SMTP.php';
+}
 
 // Replace the email dispatch loop in process-lead.php with this:
 foreach ($templates as $tpl) {
     $to = str_replace($search, $replace, $tpl['to']);
-    
+
     if (filter_var($to, FILTER_VALIDATE_EMAIL)) {
         $subject = str_replace($search, $replace, $tpl['subject']);
         $body    = str_replace($search, $replace, $tpl['body']);
-        
+
         if (isset($config['smtp_enabled']) && $config['smtp_enabled']) {
             // SMTP Sending
             $mail = new PHPMailer(true);
