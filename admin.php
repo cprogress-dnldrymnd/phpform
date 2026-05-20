@@ -79,10 +79,16 @@ if (isset($_POST['update_settings']) && isset($_SESSION['logged_in'])) {
     $config['download_button_text'] = isset($_POST['download_button_text']) ? htmlspecialchars(strip_tags($_POST['download_button_text'])) : 'Download Payload Specs';
     $config['success_message']      = isset($_POST['success_message']) ? htmlspecialchars(strip_tags($_POST['success_message'])) : 'Success! Your request has been processed.';
     
-    // API Integrations
+    // API Integrations (reCAPTCHA)
     $config['recaptcha_enabled']    = isset($_POST['recaptcha_enabled']) ? true : false;
     $config['recaptcha_site_key']   = isset($_POST['recaptcha_site_key']) ? htmlspecialchars(strip_tags($_POST['recaptcha_site_key'])) : '';
     $config['recaptcha_secret_key'] = isset($_POST['recaptcha_secret_key']) ? htmlspecialchars(strip_tags($_POST['recaptcha_secret_key'])) : '';
+
+    // API Integrations (Zapier)
+    $config['zapier_enabled']       = isset($_POST['zapier_enabled']) ? true : false;
+    $config['zapier_webhook_url']   = filter_var($_POST['zapier_webhook_url'], FILTER_SANITIZE_URL);
+    // Note: Do not strip tags from the payload to preserve valid JSON characters.
+    $config['zapier_payload']       = isset($_POST['zapier_payload']) ? $_POST['zapier_payload'] : '';
     
     if (isset($_POST['email_templates_json'])) {
         $templates = json_decode($_POST['email_templates_json'], true);
@@ -161,7 +167,7 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
         
         .form-group { margin-bottom: 1.5rem; }
         label { display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.9rem; }
-        input[type="text"], input[type="password"], textarea, select { width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 4px; box-sizing: border-box; font-family: inherit; color: #000; }
+        input[type="text"], input[type="password"], input[type="url"], textarea, select { width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 4px; box-sizing: border-box; font-family: inherit; color: #000; }
         small { color: #000; opacity: 0.7; }
         
         /* Token Badges */
@@ -354,6 +360,28 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
                         </div>
                     </div>
 
+                    <div class="form-group" style="background: #fff; padding: 1rem; border: 1px solid var(--border); border-radius: 4px; margin-top: 1.5rem;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; margin-bottom: 0.75rem;">
+                            <input type="checkbox" name="zapier_enabled" id="enableZapierToggle" value="1" <?php echo (isset($config['zapier_enabled']) && $config['zapier_enabled']) ? 'checked' : ''; ?> onchange="toggleZapierFields()">
+                            <span style="font-size: 1rem;">Enable Zapier Webhook Integration</span>
+                        </label>
+                        
+                        <div id="zapierFieldsWrapper" style="<?php echo (isset($config['zapier_enabled']) && $config['zapier_enabled']) ? 'display: block;' : 'display: none;'; ?>">
+                            <div class="form-group" style="margin-top: 1rem;">
+                                <label>Webhook URL</label>
+                                <input type="url" name="zapier_webhook_url" value="<?php echo htmlspecialchars(isset($config['zapier_webhook_url']) ? $config['zapier_webhook_url'] : ''); ?>" placeholder="https://hooks.zapier.com/hooks/catch/...">
+                            </div>
+                            <div class="form-group">
+                                <label>JSON Payload Mapping</label>
+                                <?php 
+                                    $default_json = "{\n  \"first_name\": \"{full_name}\",\n  \"email\": \"{work_email}\",\n  \"organization\": \"{org_type}\",\n  \"phone\": \"{phone}\",\n  \"download_link\": \"{download_link}\"\n}";
+                                ?>
+                                <textarea name="zapier_payload" rows="10" style="font-family: monospace; font-size: 0.85rem; line-height: 1.5; background: #f8fafc;"><?php echo htmlspecialchars(isset($config['zapier_payload']) && !empty($config['zapier_payload']) ? $config['zapier_payload'] : $default_json); ?></textarea>
+                                <small style="display: block; margin-top: 0.5rem;">Construct your JSON payload using the available dynamic tokens. The processor safely encodes all variables before transmission to prevent syntax errors.</small>
+                            </div>
+                        </div>
+                    </div>
+
                     <div style="margin-top: 2rem;">
                         <button type="submit" name="update_settings" class="btn-primary" onclick="serializeState()">Deploy Settings</button>
                     </div>
@@ -470,6 +498,14 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
         function toggleRecaptchaFields() {
             const toggle = document.getElementById('enableRecaptchaToggle');
             const wrapper = document.getElementById('recaptchaFieldsWrapper');
+            if (toggle && wrapper) {
+                wrapper.style.display = toggle.checked ? 'block' : 'none';
+            }
+        }
+
+        function toggleZapierFields() {
+            const toggle = document.getElementById('enableZapierToggle');
+            const wrapper = document.getElementById('zapierFieldsWrapper');
             if (toggle && wrapper) {
                 wrapper.style.display = toggle.checked ? 'block' : 'none';
             }

@@ -2,7 +2,7 @@
 /**
  * AJAX Endpoint for processing dynamic lead form submissions.
  * Incorporates reCAPTCHA v3 cURL validation, dynamic CSV logging,
- * email template parsing, and dynamic success messaging.
+ * Zapier webhook routing, email template parsing, and dynamic success messaging.
  */
 
 header('Content-Type: application/json');
@@ -42,7 +42,6 @@ if (isset($config['recaptcha_enabled']) && $config['recaptcha_enabled']) {
 
     $response_data = json_decode($verify_response);
     
-    // Validate success and enforce a minimum trust score (0.5 threshold)
     if (!$response_data->success || $response_data->score < 0.5) {
         echo json_encode(['success' => false, 'message' => 'Automated bot activity detected. Request denied.']);
         exit;
@@ -57,7 +56,7 @@ $csv_values  = [date('Y-m-d H:i:s')];
 $reply_to    = '';
 
 foreach ($_POST as $key => $value) {
-    if ($key === 'g-recaptcha-response') continue; // Prevent recaptcha token from writing to CSV
+    if ($key === 'g-recaptcha-response') continue; 
 
     $safe_key = htmlspecialchars(strip_tags($key));
     
@@ -133,7 +132,43 @@ $search[] = '{download_button}';
 $replace[] = $download_url;
 $replace[] = $download_button;
 
-// 5. Dispatch Emails
+
+// 5. Zapier Webhook Integration
+if (isset($config['zapier_enabled']) && $config['zapier_enabled'] && !empty($config['zapier_webhook_url'])) {
+    
+    $zapier_url = $config['zapier_webhook_url'];
+    $zapier_template = isset($config['zapier_payload']) && !empty(trim($config['zapier_payload'])) ? $config['zapier_payload'] : '{}';
+    
+    // Safely parse JSON template to prevent syntax breakage from user input quotes
+    $zapier_data = json_decode($zapier_template, true);
+    
+    if (is_array($zapier_data)) {
+        array_walk_recursive($zapier_data, function(&$item, $key) use ($search, $replace) {
+            if (is_string($item)) {
+                $item = str_replace($search, $replace, $item);
+            }
+        });
+        $zapier_json_safe = json_encode($zapier_data);
+    } else {
+        // Fallback to raw string replacement if the admin provided an invalid JSON format
+        $zapier_json_safe = str_replace($search, $replace, $zapier_template);
+    }
+    
+    $ch_z = curl_init($zapier_url);
+    curl_setopt($ch_z, CURLOPT_CUSTOMREQUEST, "POST");
+    curl_setopt($ch_z, CURLOPT_POSTFIELDS, $zapier_json_safe);
+    curl_setopt($ch_z, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch_z, CURLOPT_TIMEOUT, 3); // 3-second timeout prevents Zapier outages from hanging the user UI
+    curl_setopt($ch_z, CURLOPT_HTTPHEADER, [
+        'Content-Type: application/json',
+        'Content-Length: ' . strlen($zapier_json_safe)
+    ]);
+    curl_exec($ch_z);
+    curl_close($ch_z);
+}
+
+
+// 6. Dispatch Emails
 $headers  = "From: no-reply@" . $_SERVER['SERVER_NAME'] . "\r\n";
 $headers .= "Reply-To: " . $reply_to . "\r\n";
 $headers .= "MIME-Version: 1.0\r\n";
@@ -152,11 +187,10 @@ foreach ($templates as $tpl) {
     }
 }
 
-// 6. Dynamic Success Messaging
+// 7. Dynamic Success Messaging
 $has_auto_download = ($has_attachment && $download_url !== '' && in_array($download_method, ['auto', 'both']));
 $base_success_msg  = isset($config['success_message']) ? $config['success_message'] : 'Success! Your request has been processed.';
 
-// Parse the custom success message against your dynamic token arrays
 $parsed_success_msg = str_replace($search, $replace, $base_success_msg);
 
 echo json_encode([
