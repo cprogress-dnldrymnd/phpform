@@ -163,16 +163,7 @@ if (isset($config['zapier_enabled']) && $config['zapier_enabled'] && !empty($con
     curl_setopt($ch_z, CURLOPT_HTTPHEADER, [
         'Content-Type: application/json'
     ]);
-    $result = curl_exec($ch_z);
-    $http_code = curl_getinfo($ch_z, CURLINFO_HTTP_CODE);
-
-    // DEBUG LOG: Write the response to a file in your assets/data folder
-    file_put_contents(
-        __DIR__ . '/assets/data/zapier_debug.log',
-        "[" . date('Y-m-d H:i:s') . "] Status: $http_code | Payload: $zapier_json_safe | Response: $result" . PHP_EOL,
-        FILE_APPEND
-    );
-
+    curl_exec($ch_z);
     curl_close($ch_z);
 }
 
@@ -188,25 +179,25 @@ $templates = isset($config['email_templates']) ? $config['email_templates'] : []
 // Replace the email dispatch loop in process-lead.php with this:
 foreach ($templates as $tpl) {
     $to = str_replace($search, $replace, $tpl['to']);
-    
+
     if (filter_var($to, FILTER_VALIDATE_EMAIL)) {
         // Construct Dynamic Headers
         $fromName  = !empty($tpl['from_name']) ? str_replace($search, $replace, $tpl['from_name']) : 'System';
         $fromEmail = !empty($tpl['from_email']) ? str_replace($search, $replace, $tpl['from_email']) : 'no-reply@' . $_SERVER['SERVER_NAME'];
-        
+
         $headers  = "From: $fromName <$fromEmail>\r\n";
         $headers .= "Reply-To: " . $reply_to . "\r\n";
-        
+
         if (!empty($tpl['cc']))  $headers .= "Cc: " . str_replace($search, $replace, $tpl['cc']) . "\r\n";
         if (!empty($tpl['bcc'])) $headers .= "Bcc: " . str_replace($search, $replace, $tpl['bcc']) . "\r\n";
         if (!empty($tpl['headers'])) $headers .= str_replace($search, $replace, $tpl['headers']) . "\r\n";
-        
+
         $headers .= "MIME-Version: 1.0\r\n";
         $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
-        
+
         $subject = str_replace($search, $replace, $tpl['subject']);
         $body    = str_replace($search, $replace, $tpl['body']);
-        
+
         mail($to, $subject, $body, $headers);
     }
 }
