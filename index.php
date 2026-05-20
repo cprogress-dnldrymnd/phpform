@@ -479,28 +479,36 @@ if (file_exists($config_file)) {
       <p class="form-sub">Complete specs for all 8 modules — sent directly to your inbox.</p>
       <div class="form-group">
         <label>First Name</label>
-        <input type="text" name="first_name" placeholder="e.g. James" required>
+        <input type="text" name="first-name" placeholder="e.g. James" required>
       </div>
       <div class="form-group">
         <label>Last Name</label>
-        <input type="text" name="last_name" placeholder="e.g. Morton" required>
+        <input type="text" name="last-name" placeholder="e.g. Morton" required>
       </div>
       <div class="form-group">
         <label>Work Email</label>
-        <input type="email" name="work_email" placeholder="you@organisation.com" required>
+        <input type="email" name="email" placeholder="you@organisation.com" required>
       </div>
 
       <div class="form-group">
         <label>Organisation Type</label>
-        <select name="org_type" required>
-          <option value="">Select your sector…</option>
-          <option>Police / Blue Light</option>
-          <option>Military / Defence</option>
-          <option>Search &amp; Rescue</option>
-          <option>Critical Infrastructure</option>
-          <option>Commercial Operator</option>
-          <option>Reseller / Integrator</option>
-          <option>Other</option>
+        <select name="sector" required>
+          <option value="">Select your sector...</option>
+          <option value="Asset Integrity &amp; Inspection">Asset Integrity &amp; Inspection</option>
+          <option value="Surveying &amp; Construction">Surveying &amp; Construction</option>
+          <option value="Public Safety">Public Safety</option>
+          <option value="Agriculture &amp; Forestry">Agriculture &amp; Forestry</option>
+          <option value="Research &amp; Education">Research &amp; Education</option>
+          <option value="Energy &amp; Renewables">Energy &amp; Renewables</option>
+          <option value="Oil &amp; Gas">Oil &amp; Gas</option>
+          <option value="Security">Security</option>
+          <option value="Sport">Sport</option>
+          <option value="Film &amp; Media">Film &amp; Media</option>
+          <option value="Marine">Marine</option>
+          <option value="Drone Service Provider">Drone Service Provider</option>
+          <option value="Government Body">Government Body</option>
+          <option value="Military &amp; Defence">Military &amp; Defence</option>
+          <option value="Other">Other</option>
         </select>
       </div>
       <div class="form-group">
