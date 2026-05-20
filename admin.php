@@ -511,7 +511,10 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
 
             <div class="header">
                 <h2>System Configuration</h2>
-                <a href="?logout=1" class="btn-logout">Disconnect Session</a>
+                <div class="header-actions">
+                    <a href="documentation.php" target="_blank" style="margin-right: 15px; text-decoration: none; color: var(--accent); font-weight: 600; font-size: 0.9rem;">View Documentation</a>
+                    <a href="?logout=1" class="btn-logout">Disconnect Session</a>
+                </div>
             </div>
 
             <?php if ($success) echo "<div class='alert alert-success'>$success</div>"; ?>
@@ -788,7 +791,7 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
                     }, 1000);
                 });
             }
-            
+
 
             function toggleSmtpFields() {
                 const toggle = document.getElementById('enableSmtpToggle');
