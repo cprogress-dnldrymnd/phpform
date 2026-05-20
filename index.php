@@ -475,11 +475,7 @@ if (file_exists($config_file)) {
       </ul>
     </div>
     <form id="tundraLeadForm" class="lead-form-card">
-      <input type="hidden" name="utm_source" value="">
-      <input type="hidden" name="utm_medium" value="">
-      <input type="hidden" name="utm_campaign" value="">
-      <input type="hidden" name="utm_term" value="">
-      <input type="hidden" name="utm_content" value="">
+
       <h3>Download the full payload lineup</h3>
       <p class="form-sub">Complete specs for all 8 modules — sent directly to your inbox.</p>
       <div class="form-group">
@@ -529,6 +525,11 @@ if (file_exists($config_file)) {
 
       <div id="tundraFormNotice" style="display:none; margin-top: 15px; font-size: 0.85rem; font-weight: 600;"></div>
       <p class="form-privacy">Your details are handled in accordance with Coptrz Privacy Policy. No spam, ever.</p>
+      <input type="hidden" name="utm_source" value="">
+      <input type="hidden" name="utm_medium" value="">
+      <input type="hidden" name="utm_campaign" value="">
+      <input type="hidden" name="utm_term" value="">
+      <input type="hidden" name="utm_content" value="">
     </form>
   </section>
 
