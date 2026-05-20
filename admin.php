@@ -3,7 +3,7 @@
 /**
  * Advanced Standalone Admin Panel.
  * Implements a tabbed interface, JSON-state-managed repeater fields, 
- * dynamic file scanning, dynamic token generation, CSV viewer, and API integrations.
+ * dynamic file scanning, dynamic token generation, CSV viewer, API integrations, and AJAX Saving.
  *
  * @author Digitally Disruptive - Donald Raymundo
  * @link https://digitallydisruptive.co.uk/
@@ -91,8 +91,7 @@ if (isset($_POST['update_settings']) && isset($_SESSION['logged_in'])) {
     // API Integrations (Zapier)
     $config['zapier_enabled']       = isset($_POST['zapier_enabled']) ? true : false;
     $config['zapier_webhook_url']   = filter_var($_POST['zapier_webhook_url'], FILTER_SANITIZE_URL);
-    // Note: Do not strip tags from the payload to preserve valid JSON characters.
-    $config['zapier_payload']     = isset($_POST['zapier_json_payload']) ? $_POST['zapier_json_payload'] : '{}';
+    $config['zapier_payload']       = isset($_POST['zapier_json_payload']) ? $_POST['zapier_json_payload'] : '{}';
 
     if (isset($_POST['email_templates_json'])) {
         $templates = json_decode($_POST['email_templates_json'], true);
@@ -114,6 +113,15 @@ if (isset($_POST['update_settings']) && isset($_SESSION['logged_in'])) {
     $config['smtp_encryption']   = htmlspecialchars($_POST['smtp_encryption']);
 
     save_config($config_file, $config);
+
+    // --- AJAX RESPONSE HANDLER ---
+    if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+        header('Content-Type: application/json');
+        echo json_encode(['success' => true, 'message' => 'Settings deployed successfully.']);
+        exit; // Stop executing PHP so we return clean JSON
+    }
+    // -----------------------------
+
     $success = 'Settings updated successfully.';
 }
 
@@ -181,6 +189,7 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
             --bg: #f4f6f9;
             --border: #e2e8f0;
             --text: #000000;
+            --success: #16a34a;
         }
 
         body {
@@ -456,6 +465,12 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
             font-weight: bold;
             font-size: 1rem;
             margin-top: 1rem;
+            transition: opacity 0.2s;
+        }
+        
+        .btn-primary:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
         }
 
         .btn-secondary {
@@ -485,11 +500,6 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
             color: #991b1b;
         }
 
-        .alert-success {
-            background: #dcfce7;
-            color: #166534;
-        }
-
         /* Collapsible Integrations Styles */
         .collapsible-container {
             margin-bottom: 1.5rem;
@@ -497,7 +507,6 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
             border: 1px solid var(--border);
             border-radius: 4px;
         }
-
         .collapsible-header {
             padding: 1rem;
             display: flex;
@@ -509,31 +518,25 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
             border-bottom: 1px solid transparent;
             border-radius: 4px;
         }
-
         .collapsible-header:hover {
             background: #f1f5f9;
         }
-
         .collapsible-header.expanded {
             border-bottom-color: var(--border);
             border-radius: 4px 4px 0 0;
         }
-
         .collapsible-content {
             display: none;
             padding: 1rem;
         }
-
         .header-checkbox {
             display: flex;
             align-items: center;
             gap: 0.5rem;
             font-weight: 600;
-            /* Changed from normal to 600 */
             margin: 0;
             cursor: pointer;
         }
-
         .collapsible-header::after {
             content: '▼';
             font-size: 0.8rem;
@@ -541,20 +544,38 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
             margin-left: 1rem;
             transition: transform 0.2s;
         }
-
         .collapsible-header.expanded::after {
             transform: rotate(180deg);
         }
 
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
+        /* Toast Notification Styles */
+        #ajaxToast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background-color: var(--success);
+            color: #fff;
+            padding: 1rem 1.5rem;
+            border-radius: 6px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            font-weight: 600;
+            font-size: 0.95rem;
+            z-index: 9999;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+            pointer-events: none;
+        }
+        #ajaxToast.show {
+            opacity: 1;
+            transform: translateY(0);
         }
     </style>
 </head>
 
 <body>
+    <div id="ajaxToast">Settings deployed successfully.</div>
+
     <div class="container">
 
         <?php if (!isset($_SESSION['logged_in'])): ?>
@@ -579,8 +600,6 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
                 </div>
             </div>
 
-            <?php if ($success) echo "<div class='alert alert-success'>$success</div>"; ?>
-
             <div class="tabs">
                 <button class="tab-btn <?php echo $active_tab === 'tab-form' ? 'active' : ''; ?>" onclick="switchTab(event, 'tab-form')">Form Settings</button>
                 <button class="tab-btn <?php echo $active_tab === 'tab-emails' ? 'active' : ''; ?>" onclick="switchTab(event, 'tab-emails')">Email Builder</button>
@@ -591,6 +610,7 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
             <form method="POST" id="mainForm">
                 <input type="hidden" name="email_templates_json" id="emailTemplatesJson">
                 <input type="hidden" name="zapier_json_payload" id="zapierJsonPayload">
+                
                 <div id="tab-form" class="tab-content <?php echo $active_tab === 'tab-form' ? 'active' : ''; ?>">
 
                     <div class="form-group">
@@ -660,7 +680,7 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
                     </div>
 
                     <div style="margin-top: 2rem;">
-                        <button type="submit" name="update_settings" class="btn-primary" onclick="serializeState()">Deploy Settings</button>
+                        <button type="submit" name="update_settings" class="btn-primary">Deploy Settings</button>
                     </div>
                 </div>
 
@@ -682,7 +702,7 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
                     <button type="button" class="btn-secondary" onclick="addTemplate()">+ Add Email Template</button>
 
                     <div style="margin-top: 2rem; border-top: 1px solid var(--border); padding-top: 1.5rem;">
-                        <button type="submit" name="update_settings" class="btn-primary" onclick="serializeState()">Deploy Settings</button>
+                        <button type="submit" name="update_settings" class="btn-primary">Deploy Settings</button>
                     </div>
                 </div>
 
@@ -762,7 +782,7 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
                     </div>
 
                     <div style="margin-top: 2rem;">
-                        <button type="submit" name="update_settings" class="btn-primary" onclick="serializeState()">Deploy Settings</button>
+                        <button type="submit" name="update_settings" class="btn-primary">Deploy Settings</button>
                     </div>
                 </div>
             </form>
@@ -840,6 +860,71 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
     <?php if (isset($_SESSION['logged_in'])): ?>
         <script>
             let appState = <?php echo json_encode($initial_templates); ?>;
+            let zapierState = <?php echo json_encode($initial_zapier); ?>;
+
+            // --- AJAX FORM SUBMISSION LOGIC ---
+            const mainForm = document.getElementById('mainForm');
+            if (mainForm) {
+                mainForm.addEventListener('submit', function(e) {
+                    e.preventDefault(); // Stop page reload
+
+                    // 1. Serialize complex UI state into hidden inputs
+                    serializeState();
+
+                    // 2. Prepare Data for AJAX
+                    const formData = new FormData(this);
+                    formData.append('update_settings', '1'); 
+
+                    // 3. UI Feedback - Disable buttons and change text
+                    const submitBtns = this.querySelectorAll('button[type="submit"]');
+                    submitBtns.forEach(btn => {
+                        btn.dataset.originalText = btn.innerText;
+                        btn.innerText = 'Saving...';
+                        btn.disabled = true;
+                    });
+
+                    // 4. Send via Fetch API
+                    fetch(window.location.href, {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            showToast(data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Save Error:', error);
+                        alert('A network error occurred while saving.');
+                    })
+                    .finally(() => {
+                        // Restore button states
+                        submitBtns.forEach(btn => {
+                            btn.innerText = btn.dataset.originalText;
+                            btn.disabled = false;
+                        });
+                    });
+                });
+            }
+
+            // Function to trigger the Toast Notification
+            function showToast(message) {
+                const toast = document.getElementById('ajaxToast');
+                if (toast) {
+                    toast.innerText = message;
+                    toast.classList.add('show');
+                    
+                    // Hide after 3 seconds
+                    setTimeout(() => {
+                        toast.classList.remove('show');
+                    }, 3000);
+                }
+            }
+
 
             function generateId() {
                 return 'tpl_' + Math.random().toString(36).substr(2, 9);
@@ -857,7 +942,7 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
                 });
             }
 
-            // New Collapsible Toggle Logic
+            // Collapsible Toggle Logic
             function toggleCollapsible(el) {
                 const content = el.nextElementSibling;
                 el.classList.toggle('expanded');
@@ -888,12 +973,14 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
                 document.getElementById(tabId).classList.add('active');
                 evt.currentTarget.classList.add('active');
 
+                // Update URL without reloading so sharing links to specific tabs works
                 if (window.history.replaceState && window.location.search) {
                     const newUrl = window.location.pathname;
                     window.history.replaceState({}, document.title, newUrl);
                 }
             }
 
+            // Email Builder Logic
             function renderRepeater() {
                 const container = document.getElementById('repeaterContainer');
                 container.innerHTML = '';
@@ -903,7 +990,6 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
                     item.className = 'repeater-item';
                     item.dataset.id = tpl.id;
 
-                    // Ensure defaults exist to prevent undefined errors
                     tpl.from_name = tpl.from_name || '';
                     tpl.from_email = tpl.from_email || '';
                     tpl.cc = tpl.cc || '';
@@ -1025,16 +1111,11 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
                 previewFrame.innerHTML = processedHtml;
             }
 
-            function serializeState() {
-                document.getElementById('emailTemplatesJson').value = JSON.stringify(appState);
-            }
-
             function escapeHtml(unsafe) {
                 return (unsafe || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
             }
 
-            let zapierState = <?php echo json_encode($initial_zapier); ?>;
-
+            // Zapier Builder Logic
             function renderZapierRepeater() {
                 const container = document.getElementById('zapierRepeaterContainer');
                 container.innerHTML = '';
@@ -1054,10 +1135,7 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
             }
 
             function addZapierRow() {
-                zapierState.push({
-                    key: '',
-                    value: ''
-                });
+                zapierState.push({ key: '', value: '' });
                 renderZapierRepeater();
             }
 
@@ -1070,11 +1148,12 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
                 zapierState[index][field] = val;
             }
 
+            // Core serialization called automatically before AJAX dispatch
             function serializeState() {
-                // Serialize Email Templates (existing)
+                // Compile Email Objects
                 document.getElementById('emailTemplatesJson').value = JSON.stringify(appState);
 
-                // Serialize Zapier Repeater to JSON string
+                // Compile Zapier JSON Payload
                 const zapierObj = {};
                 zapierState.forEach(row => {
                     if (row.key) zapierObj[row.key] = row.value;
