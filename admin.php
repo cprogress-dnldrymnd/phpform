@@ -801,44 +801,45 @@ $all_tokens = array_merge($dynamic_form_tokens, $system_tokens);
                     item.className = 'repeater-item';
                     item.dataset.id = tpl.id;
 
+                    // Ensure defaults exist to prevent undefined errors
+                    tpl.from_name = tpl.from_name || '';
+                    tpl.from_email = tpl.from_email || '';
+                    tpl.cc = tpl.cc || '';
+                    tpl.bcc = tpl.bcc || '';
+                    tpl.headers = tpl.headers || '';
+
                     item.innerHTML = `
-                    <div class="repeater-header" onclick="toggleCollapse(this)">
-                        <h4 class="repeater-title">${tpl.name || 'Untitled Template'}</h4>
-                        <div class="repeater-actions">
-                            <button type="button" class="btn-icon" onclick="duplicateTemplate(event, '${tpl.id}')">Duplicate</button>
-                            <button type="button" class="btn-icon btn-delete" onclick="deleteTemplate(event, '${tpl.id}')">Delete</button>
+            <div class="repeater-header" onclick="toggleCollapse(this)">
+                <h4 class="repeater-title">${tpl.name || 'Untitled Template'}</h4>
+                <div class="repeater-actions">
+                    <button type="button" class="btn-icon" onclick="duplicateTemplate(event, '${tpl.id}')">Duplicate</button>
+                    <button type="button" class="btn-icon btn-delete" onclick="deleteTemplate(event, '${tpl.id}')">Delete</button>
+                </div>
+            </div>
+            <div class="repeater-body">
+                <div class="editor-grid">
+                    <div class="editor-fields">
+                        <div class="form-group"><label>Reference Name</label><input type="text" value="${escapeHtml(tpl.name)}" oninput="updateState('${tpl.id}', 'name', this.value); updateHeader(this, this.value)"></div>
+                        <div class="form-group"><label>Recipient(s)</label><input type="text" value="${escapeHtml(tpl.to)}" oninput="updateState('${tpl.id}', 'to', this.value)"></div>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div class="form-group"><label>From Name</label><input type="text" value="${escapeHtml(tpl.from_name)}" oninput="updateState('${tpl.id}', 'from_name', this.value)"></div>
+                            <div class="form-group"><label>From Email</label><input type="text" value="${escapeHtml(tpl.from_email)}" oninput="updateState('${tpl.id}', 'from_email', this.value)"></div>
                         </div>
-                    </div>
-                    <div class="repeater-body">
-                        <div class="editor-grid">
-                            <div class="editor-fields">
-                                <div class="form-group">
-                                    <label>Template Reference Name (Internal)</label>
-                                    <input type="text" value="${escapeHtml(tpl.name)}" oninput="updateState('${tpl.id}', 'name', this.value); updateHeader(this, this.value)">
-                                </div>
-                                <div class="form-group">
-                                    <label>Recipient Email(s)</label>
-                                    <input type="text" value="${escapeHtml(tpl.to)}" oninput="updateState('${tpl.id}', 'to', this.value)">
-                                </div>
-                                <div class="form-group">
-                                    <label>Subject Line</label>
-                                    <input type="text" value="${escapeHtml(tpl.subject)}" oninput="updateState('${tpl.id}', 'subject', this.value)">
-                                </div>
-                                <div class="form-group">
-                                    <label>HTML Body</label>
-                                    <textarea rows="14" oninput="updateState('${tpl.id}', 'body', this.value); renderPreview('${tpl.id}', this.value)">${escapeHtml(tpl.body)}</textarea>
-                                </div>
-                            </div>
-                            <div class="editor-preview">
-                                <div class="live-preview-box">
-                                    <div class="live-preview-header">Live HTML Render</div>
-                                    <div class="live-preview-content" id="preview_${tpl.id}">
-                                        </div>
-                                </div>
-                            </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div class="form-group"><label>CC</label><input type="text" value="${escapeHtml(tpl.cc)}" oninput="updateState('${tpl.id}', 'cc', this.value)"></div>
+                            <div class="form-group"><label>BCC</label><input type="text" value="${escapeHtml(tpl.bcc)}" oninput="updateState('${tpl.id}', 'bcc', this.value)"></div>
                         </div>
+
+                        <div class="form-group"><label>Subject</label><input type="text" value="${escapeHtml(tpl.subject)}" oninput="updateState('${tpl.id}', 'subject', this.value)"></div>
+                        <div class="form-group"><label>Additional Headers (One per line)</label><textarea rows="3" oninput="updateState('${tpl.id}', 'headers', this.value)">${escapeHtml(tpl.headers)}</textarea></div>
+                        <div class="form-group"><label>HTML Body</label><textarea rows="10" oninput="updateState('${tpl.id}', 'body', this.value); renderPreview('${tpl.id}', this.value)">${escapeHtml(tpl.body)}</textarea></div>
                     </div>
-                `;
+                    <div class="editor-preview"><div class="live-preview-box"><div class="live-preview-header">Live Preview</div><div class="live-preview-content" id="preview_${tpl.id}"></div></div></div>
+                </div>
+            </div>
+        `;
                     container.appendChild(item);
                     renderPreview(tpl.id, tpl.body);
                 });
