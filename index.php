@@ -475,6 +475,11 @@ if (file_exists($config_file)) {
       </ul>
     </div>
     <form id="tundraLeadForm" class="lead-form-card">
+      <input type="hidden" name="utm_source" value="">
+      <input type="hidden" name="utm_medium" value="">
+      <input type="hidden" name="utm_campaign" value="">
+      <input type="hidden" name="utm_term" value="">
+      <input type="hidden" name="utm_content" value="">
       <h3>Download the full payload lineup</h3>
       <p class="form-sub">Complete specs for all 8 modules — sent directly to your inbox.</p>
       <div class="form-group">
