@@ -108,7 +108,7 @@ if (file_exists($config_file)) {
   <div class="mission-brief-right">
     <p>Professional drones are becoming critical infrastructure — used across defence, police, SAR, and inspection. But most are still <strong>built around fixed payloads</strong>. Operators improvise with zip ties and tape. It doesn't scale, and it conflicts with sensors and antennas.</p>
     <p>Tundra solves this by standardising the mission layer. One drone. One base. <strong>Unlimited missions.</strong> Deploy the right tool for the right scenario — without buying a new aircraft.</p>
-    <div class="mission-tagline">drones last. missions change. payloads standardise.</div>
+    <div class="mission-tagline">Drones last. Missions change. Payloads standardise.</div>
   </div>
 </section>
 
@@ -247,6 +247,9 @@ if (file_exists($config_file)) {
         <h3>Execute the mission</h3>
         <p>Fly and operate payloads from the standard RC. Swap modules in under 5 seconds between sorties. One aircraft — infinite mission sets.</p>
       </div>
+    </div>
+    <div style="text-align: center;">
+      <a href="#download" class="btn-primary">Download Full Payload Specs</a>
     </div>
   </div>
 </section>
