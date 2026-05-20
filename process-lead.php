@@ -172,57 +172,105 @@ if (isset($config['zapier_enabled']) && $config['zapier_enabled'] && !empty($con
 
 
 // 6. Dispatch Emails
-$headers  = "From: no-reply@" . $_SERVER['SERVER_NAME'] . "\r\n";
-$headers .= "Reply-To: " . $reply_to . "\r\n";
-$headers .= "MIME-Version: 1.0\r\n";
-$headers .= "Content-Type: text/html; charset=UTF-8\r\n";
-
 $templates = isset($config['email_templates']) ? $config['email_templates'] : [];
-
 
 if (isset($config['smtp_enabled']) && $config['smtp_enabled']) {
     // Load PHPMailer (ensure paths match your folder structure)
-    require 'includes/phpmailer/src/Exception.php';
-    require 'includes/phpmailer/src/PHPMailer.php';
-    require 'includes/phpmailer/src/SMTP.php';
+    require_once 'includes/phpmailer/src/Exception.php';
+    require_once 'includes/phpmailer/src/PHPMailer.php';
+    require_once 'includes/phpmailer/src/SMTP.php';
 }
 
-// Replace the email dispatch loop in process-lead.php with this:
 foreach ($templates as $tpl) {
     $to = str_replace($search, $replace, $tpl['to']);
 
     if (filter_var($to, FILTER_VALIDATE_EMAIL)) {
         $subject = str_replace($search, $replace, $tpl['subject']);
         $body    = str_replace($search, $replace, $tpl['body']);
+        
+        // Process From, CC, and BCC strings (Replace dynamic tokens)
+        $fromName  = !empty($tpl['from_name']) ? str_replace($search, $replace, $tpl['from_name']) : 'System';
+        $fromEmail = !empty($tpl['from_email']) ? str_replace($search, $replace, $tpl['from_email']) : 'no-reply@' . $_SERVER['SERVER_NAME'];
+        
+        $cc_list  = !empty($tpl['cc']) ? str_replace($search, $replace, $tpl['cc']) : '';
+        $bcc_list = !empty($tpl['bcc']) ? str_replace($search, $replace, $tpl['bcc']) : '';
 
         if (isset($config['smtp_enabled']) && $config['smtp_enabled']) {
-            // SMTP Sending
+            // SMTP Sending Implementation (PHPMailer)
             $mail = new PHPMailer(true);
-            $mail->isSMTP();
-            $mail->Host       = $config['smtp_host'];
-            $mail->SMTPAuth   = true;
-            $mail->Username   = $config['smtp_user'];
-            $mail->Password   = $config['smtp_pass'];
-            $encryption = isset($config['smtp_encryption']) ? $config['smtp_encryption'] : 'tls';
-            if ($encryption === 'tls') {
-                $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-            } elseif ($encryption === 'ssl') {
-                $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
-            } else {
-                $mail->SMTPSecure = ''; // None
+            try {
+                $mail->isSMTP();
+                $mail->Host       = $config['smtp_host'];
+                $mail->SMTPAuth   = true;
+                $mail->Username   = $config['smtp_user'];
+                $mail->Password   = $config['smtp_pass'];
+                
+                $encryption = isset($config['smtp_encryption']) ? $config['smtp_encryption'] : 'tls';
+                if ($encryption === 'tls') {
+                    $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+                } elseif ($encryption === 'ssl') {
+                    $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
+                } else {
+                    $mail->SMTPSecure = ''; // None
+                }
+
+                $mail->Port = $config['smtp_port'];
+
+                // Handle SendGrid edge-case where username is 'apikey'
+                $verifiedFrom = ($config['smtp_user'] === 'apikey' && empty($tpl['from_email'])) ? 'no-reply@' . $_SERVER['SERVER_NAME'] : $fromEmail;
+                
+                $mail->setFrom($verifiedFrom, $fromName);
+                $mail->addAddress($to);
+                if (!empty($reply_to)) {
+                    $mail->addReplyTo($reply_to);
+                }
+
+                // Parse and append multiple CCs securely
+                if (!empty($cc_list)) {
+                    $ccs = explode(',', $cc_list);
+                    foreach ($ccs as $cc) {
+                        $clean_cc = trim($cc);
+                        if (filter_var($clean_cc, FILTER_VALIDATE_EMAIL)) {
+                            $mail->addCC($clean_cc);
+                        }
+                    }
+                }
+                
+                // Parse and append multiple BCCs securely
+                if (!empty($bcc_list)) {
+                    $bccs = explode(',', $bcc_list);
+                    foreach ($bccs as $bcc) {
+                        $clean_bcc = trim($bcc);
+                        if (filter_var($clean_bcc, FILTER_VALIDATE_EMAIL)) {
+                            $mail->addBCC($clean_bcc);
+                        }
+                    }
+                }
+
+                $mail->isHTML(true);
+                $mail->Subject = $subject;
+                $mail->Body    = $body;
+                $mail->send();
+                
+            } catch (Exception $e) {
+                // Fail silently to the user, but log the error for the admin
+                error_log('SMTP Dispatch Error: ' . $mail->ErrorInfo);
             }
-
-            $mail->Port       = $config['smtp_port'];
-
-            $mail->setFrom($config['smtp_user'] === 'apikey' ? 'your-verified-email@domain.com' : $config['smtp_user'], $tpl['from_name']);
-            $mail->addAddress($to);
-            $mail->isHTML(true);
-            $mail->Subject = $subject;
-            $mail->Body    = $body;
-            $mail->send();
         } else {
-            // Standard mail() fallback
-            $headers = "MIME-Version: 1.0\r\nContent-Type: text/html; charset=UTF-8\r\n";
+            // Native mail() Fallback Implementation
+            $headers  = "From: $fromName <$fromEmail>\r\n";
+            if (!empty($reply_to)) {
+                $headers .= "Reply-To: $reply_to\r\n";
+            }
+            if (!empty($cc_list)) {
+                $headers .= "Cc: $cc_list\r\n";
+            }
+            if (!empty($bcc_list)) {
+                $headers .= "Bcc: $bcc_list\r\n";
+            }
+            $headers .= "MIME-Version: 1.0\r\n";
+            $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
+            
             mail($to, $subject, $body, $headers);
         }
     }
