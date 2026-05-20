@@ -1333,4 +1333,13 @@ footer {
   .payload-grid {
     grid-template-columns: 1fr;
   }
+
+  .hero-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+  }
+  .hero {
+    min-height: unset;
+  }
 }
