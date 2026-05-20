@@ -167,6 +167,8 @@ if (isset($config['zapier_enabled']) && $config['zapier_enabled'] && !empty($con
     ]);
     curl_exec($ch_z);
     // Debugging: Log curl errors
+        error_log('Zapier Webhook Error: ' . $ch_z);
+
     if (curl_errno($ch_z)) {
         error_log('Zapier Webhook Error: ' . curl_error($ch_z));
     }
