@@ -970,7 +970,7 @@ footer {
 .footer-address {
   max-width: 350px;
 }
-.footer-address p, .footer-contact p {
+.footer-address p, .footer-contact p, .footer-contact a {
   font-size: 0.9rem;
   color: rgba(136, 136, 136, 0.75);
   line-height: 1.6;
