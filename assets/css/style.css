@@ -967,6 +967,9 @@ footer {
 .footer--title {
   margin-bottom: 10px;
 }
+.footer-address {
+  max-width: 350px;
+}
 .footer-left {
     display: flex;
     gap: 2rem;
