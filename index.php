@@ -82,7 +82,7 @@ if (file_exists($config_file)) {
     </div>
     <div class="hero-visual">
       <div class="hero-drone-frame">
-        <img src="assets/images/drone.png">
+        <img src="assets/images/drone1.png">
       </div>
     </div>
   </section>
