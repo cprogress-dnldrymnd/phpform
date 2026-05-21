@@ -974,6 +974,7 @@ footer {
   display: flex;
   align-items: center;
   gap: 1.25rem;
+  padding-top: 5px;
 }
 .footer-logos img {
   display: block;
