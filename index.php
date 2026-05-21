@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Securely extracts the public reCAPTCHA Site Key from the system configuration.
  */
@@ -539,11 +540,13 @@ if (file_exists($config_file)) {
         <div class="footer-divider"></div>
         <img src="assets/images/coptrz-logo-white.png" alt="Coptrz" width="110" height="28" loading="lazy" decoding="async">
       </div>
-      <p class="footer-copy">© 2026 Tundra Drone Technologies AS. All rights reserved. Tundra® is a registered trademark.<br>Distributed in the UK exclusively by Coptrz Ltd. Specifications subject to change.</p>
+
     </div>
     <div class="footer-links">
       <a href="https://coptrz.com/privacy-policy" target="_blank">Privacy</a>
     </div>
+
+    <p class="footer-copy">© 2026 Tundra Drone Technologies AS. All rights reserved. Tundra® is a registered trademark.<br>Distributed in the UK exclusively by Coptrz Ltd. Specifications subject to change.</p>
   </footer>
   <script>
     window.TUNDRA_CONFIG = {
