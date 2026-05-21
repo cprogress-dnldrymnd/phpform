@@ -539,8 +539,6 @@ if (file_exists($config_file)) {
         <img src="assets/images/tundra-logo-white.png" alt="Tundra Drone" width="100" height="40" loading="lazy" decoding="async">
         <div class="footer-divider"></div>
         <img src="assets/images/coptrz-logo-white.png" alt="Coptrz" width="110" height="28" loading="lazy" decoding="async">
-
-        <p class="footer-copy">© 2026 Tundra Drone Technologies AS. All rights reserved. Tundra® is a registered trademark.<br>Distributed in the UK exclusively by Coptrz Ltd. Specifications subject to change.</p>
       </div>
       <div class="footer-contact">
         <div class="footer--title"><strong>Contact Us</strong></div>
@@ -556,6 +554,7 @@ if (file_exists($config_file)) {
       <a href="https://coptrz.com/privacy-policy" target="_blank">Privacy</a>
     </div>
 
+    <p class="footer-copy">© 2026 Tundra Drone Technologies AS. All rights reserved. Tundra® is a registered trademark.<br>Distributed in the UK exclusively by Coptrz Ltd. Specifications subject to change.</p>
   </footer>
   <script>
     window.TUNDRA_CONFIG = {

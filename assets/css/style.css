@@ -970,17 +970,20 @@ footer {
 .footer-address {
   max-width: 350px;
 }
-.footer-address p, .footer-contact p, .footer-contact a {
+.footer-address p,
+.footer-contact p,
+.footer-contact a {
   font-size: 0.9rem;
   color: rgba(136, 136, 136, 0.75);
   line-height: 1.6;
 }
 .footer-left {
-    display: flex;
-    gap: clamp(20px, 4vw, 75px);
-    align-items: flex-start;
-    flex-wrap: wrap;
+  display: flex;
+  gap: clamp(20px, 4vw, 75px);
+  align-items: flex-start;
+  flex-wrap: wrap;
 }
+
 .footer-logos {
   display: flex;
   align-items: center;
