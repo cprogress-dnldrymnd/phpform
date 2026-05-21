@@ -964,6 +964,9 @@ footer {
   align-items: center;
   gap: 2rem;
 }
+.footer--title {
+  margin-bottom: 10px;
+}
 .footer-left {
     display: flex;
     gap: 2rem;

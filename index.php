@@ -541,12 +541,12 @@ if (file_exists($config_file)) {
         <img src="assets/images/coptrz-logo-white.png" alt="Coptrz" width="110" height="28" loading="lazy" decoding="async">
       </div>
       <div class="footer-contact">
-        <div><strong>Contact Us</strong></div><br>
+        <div class="footer--title"><strong>Contact Us</strong></div>
         <a href="tel:03301117177">0330 111 7177</a><br>
         <a href="mailto:sales@coptrz.com">sales@coptrz.com</a>
       </div>
       <div class="footer-address">
-        <div><strong>Address</strong></div><br>
+        <div class="footer--title"><strong>Address</strong></div>
         <p>COPTRZ Phoenix House 3 South Parade Leeds LS1 5QX United Kingdom</p>
       </div>
     </div>
