@@ -545,7 +545,8 @@ if (file_exists($config_file)) {
         <a href="tel:03301117177">0330 111 7177</a>
       </div>
       <div class="footer-address">
-        <p>COPTRZ<br>Phoenix House<br>3 South Parade<br>Leeds<br>LS1 5QX<br>United Kingdom</p>
+        <div><strong>Address</strong></div>
+        <p>COPTRZ Phoenix House 3 South Parade Leeds LS1 5QX United Kingdom</p>
       </div>
     </div>
     <div class="footer-links">

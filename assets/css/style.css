@@ -965,9 +965,10 @@ footer {
   gap: 2rem;
 }
 .footer-left {
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
+    display: flex;
+    gap: 2rem;
+    align-items: flex-start;
+    flex-wrap: wrap;
 }
 .footer-logos {
   display: flex;
