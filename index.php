@@ -542,7 +542,8 @@ if (file_exists($config_file)) {
       </div>
       <div class="footer-contact">
         <div><strong>Contact Us</strong></div>
-        <a href="tel:03301117177">0330 111 7177</a>
+        <a href="tel:03301117177">0330 111 7177</a><br>
+        <a href="mailto:sales@coptrz.com">sales@coptrz.com</a>
       </div>
       <div class="footer-address">
         <div><strong>Address</strong></div>
