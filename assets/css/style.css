@@ -972,7 +972,7 @@ footer {
 }
 .footer-left {
     display: flex;
-    gap: 2rem;
+    gap: clamp(20px, 4vw, 75px);
     align-items: flex-start;
     flex-wrap: wrap;
 }
